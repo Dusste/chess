@@ -2,7 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Dict
-import Html exposing (Html, th)
+import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import List.Extra
@@ -139,11 +139,9 @@ startPositionPlayer2 =
 calcNextMovesBasedOnFigure : Figure -> Int -> Int -> List FigureState -> List FigureState -> List Field
 calcNextMovesBasedOnFigure fg x y player1 player2 =
     let
-        positionsOfMyOtherFigures : ( List Field, List Field )
+        positionsOfMyOtherFigures : List Field
         positionsOfMyOtherFigures =
-            ( getPositionsOfMyOtherFigures X (Field x y) player2
-            , getPositionsOfMyOtherFigures Y (Field x y) player2
-            )
+            getPositionsOfMyOtherFigures (Field x y) player2
     in
     case fg of
         Pawn ->
@@ -152,7 +150,7 @@ calcNextMovesBasedOnFigure fg x y player1 player2 =
                 possibleFieldstoMove =
                     moveByAxisPerFigure.pawn
                         (Field x y)
-                        (positionsOfMyOtherFigures |> Tuple.first)
+                        positionsOfMyOtherFigures
             in
             possibleFieldstoMove
 
@@ -160,11 +158,7 @@ calcNextMovesBasedOnFigure fg x y player1 player2 =
             let
                 possibleFieldstoMove : List Field
                 possibleFieldstoMove =
-                    List.concat
-                        [ Tuple.first positionsOfMyOtherFigures
-                        , Tuple.second positionsOfMyOtherFigures
-                        ]
-                        |> getPossibleFieldsToMove (Field x y)
+                    moveByAxisPerFigure.rook (Field x y) positionsOfMyOtherFigures
             in
             possibleFieldstoMove
 
@@ -301,26 +295,24 @@ getPossitionOfActiveFigure pnm =
             Nothing
 
 
-getPositionsOfMyOtherFigures : Axis -> Field -> List FigureState -> List Field
-getPositionsOfMyOtherFigures axis currentField myTeam =
-    {-
-       For X, it will return whole vertical
-       For Y, it will return whole horizontal
-    -}
+getPositionsOfMyOtherFigures : Field -> List FigureState -> List Field
+getPositionsOfMyOtherFigures currentField myTeam =
     myTeam
         |> List.filter
             (\fs ->
                 fs.moves
                     |> List.head
-                    -- have other then me Figures in the same column / row
+                    -- have (other then me) Figures in the same column / row
                     |> Maybe.Extra.filter
                         (\m ->
-                            case axis of
-                                X ->
-                                    m.x == currentField.x && m.y /= currentField.y
-
-                                Y ->
-                                    m.y == currentField.y && m.x /= currentField.x
+                            m.x
+                                == currentField.x
+                                && m.y
+                                /= currentField.y
+                                || m.y
+                                == currentField.y
+                                && m.x
+                                /= currentField.x
                         )
                     |> Maybe.Extra.isJust
             )
