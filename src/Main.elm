@@ -24,104 +24,6 @@ type Axis
     | Y
 
 
-
--- MODEL
--- type Horizontal
---     = A
---     | B
---     | C
---     | D
---     | E
---     | F
---     | G
---     | H
--- horizontalToString : Horizontal -> String
--- horizontalToString hz =
---     case hz of
---         A ->
---             "A"
---         B ->
---             "B"
---         C ->
---             "C"
---         D ->
---             "D"
---         E ->
---             "E"
---         F ->
---             "F"
---         G ->
---             "G"
---         H ->
---             "H"
--- stringToHorizantal : String -> Horizontal
--- stringToHorizantal str =
---     case str of
---         "A" ->
---             A
---         "B" ->
---             B
---         "C" ->
---             C
---         "D" ->
---             D
---         "E" ->
---             E
---         "F" ->
---             F
---         "G" ->
---             G
---         _ ->
---             H
--- type Vertical
---     = One
---     | Two
---     | Three
---     | Four
---     | Five
---     | Six
---     | Seven
---     | Eight
--- verticalToString : Vertical -> String
--- verticalToString hz =
---     case hz of
---         One ->
---             "1"
---         Two ->
---             "2"
---         Three ->
---             "3"
---         Four ->
---             "4"
---         Five ->
---             "5"
---         Six ->
---             "6"
---         Seven ->
---             "7"
---         Eight ->
---             "8"
--- intToVertical : Int -> Vertical
--- intToVertical num =
---     case num of
---         1 ->
---             One
---         2 ->
---             Two
---         3 ->
---             Three
---         4 ->
---             Four
---         5 ->
---             Five
---         6 ->
---             Six
---         7 ->
---             Seven
---         _ ->
---             Eight
-
-
 type alias FigureState =
     { figure : Figure
     , moves : List Field
@@ -246,46 +148,26 @@ calcNextMovesBasedOnFigure fg x y player1 player2 =
     case fg of
         Pawn ->
             let
-                result =
-                    moveByAxisPerFigure.pawn (Field x y) (positionsOfMyOtherFigures |> Tuple.first)
+                possibleFieldstoMove : List Field
+                possibleFieldstoMove =
+                    moveByAxisPerFigure.pawn
+                        (Field x y)
+                        (positionsOfMyOtherFigures |> Tuple.first)
             in
-            result
+            possibleFieldstoMove
 
         Rook ->
             let
-                myClosestFigures =
+                possibleFieldstoMove : List Field
+                possibleFieldstoMove =
                     List.concat
                         [ Tuple.first positionsOfMyOtherFigures
                         , Tuple.second positionsOfMyOtherFigures
                         ]
-                        |> getClosestFigures (Field x y)
-
-                result =
-                    moveByAxisPerFigure.rook (Field x y) myClosestFigures
-
-                -- result =
-                --     [ moveByAxisPerFigure.rook X (Field x y) (positionsOfMyOtherFigures |> Tuple.first)
-                --     , moveByAxisPerFigure.rook Y (Field x y) (positionsOfMyOtherFigures |> Tuple.second)
-                --     ]
-                --         |> List.concat
-                -- |> Debug.log "getAllPossibleMovesByAxisForRook"
-                -- |> List.minimum
+                        |> getPossibleFieldsToMove (Field x y)
             in
-            -- positionsOfMyOtherFigures
-            result
+            possibleFieldstoMove
 
-        -- |> List.filter
-        --     (\m ->
-        --         let
-        --             List.maximum (abs (y - m.y))
-        --         in
-        --     )
-        -- List.repeat
-        --     number_of_columns
-        --     { x = number_of_rows, y = number_of_columns }
-        --     |> List.map (\curr -> { x = curr.x - 1, y = curr.y - 1 })
-        -- _ ->
-        --     []
         _ ->
             []
 
@@ -357,7 +239,7 @@ isEqualPosition x x1 y y1 =
 
 type
     PossibleNextMove
-    -- Next Move - Current Field and Next Potential fields
+    -- Next Move - Current Field and Next Move Potential fields
     = NextMove Field (List Field)
     | Idle
 
@@ -478,7 +360,7 @@ getAllPossibleMovesByAxisForPawn currentField positionsOfMyOtherFigures =
 
 moveByAxisPerFigure =
     { pawn = getAllPossibleMovesByAxisForPawn
-    , rook = getAllPossibleMovesByAxisForRook
+    , rook = getPossibleFieldsToMove
     , knight = ()
     , bishop = ()
     , queen = ()
@@ -486,120 +368,114 @@ moveByAxisPerFigure =
     }
 
 
-fromMeToTop : Field -> List Field -> Maybe Field
-fromMeToTop target lst =
+
+-- fromMeToTop : Field -> List Field -> Maybe Field
+
+
+fromMeToTop : Field -> List Field -> List Field
+fromMeToTop currentField lst =
     --go up -> lower number
-    if target.y /= 0 then
-        case List.Extra.find (\f -> target.x == f.x && target.y == f.y) lst of
-            Just found ->
-                Just found
+    let
+        nextField : Field
+        nextField =
+            { currentField | y = currentField.y - 1 }
+    in
+    if nextField.y /= 0 then
+        if
+            lst
+                |> List.Extra.find
+                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                |> Maybe.Extra.isJust
+        then
+            -- closest figure found -> exit
+            []
 
-            Nothing ->
-                fromMeToTop { y = target.y - 1, x = target.x } lst
+        else
+            nextField :: fromMeToTop nextField lst
 
     else
-        Nothing
+        []
 
 
-fromMeToBottom : Field -> List Field -> Maybe Field
-fromMeToBottom target lst =
+fromMeToBottom : Field -> List Field -> List Field
+fromMeToBottom currentField lst =
     --go down -> bigger number
-    if target.y <= 8 then
-        case List.Extra.find (\f -> target.x == f.x && target.y == f.y) lst of
-            Just found ->
-                Just found
+    let
+        nextField : Field
+        nextField =
+            { currentField | y = currentField.y + 1 }
+    in
+    if nextField.y <= 8 then
+        if
+            lst
+                |> List.Extra.find
+                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                |> Maybe.Extra.isJust
+        then
+            []
 
-            Nothing ->
-                fromMeToBottom { y = target.y + 1, x = target.x } lst
+        else
+            nextField :: fromMeToBottom nextField lst
 
     else
-        Nothing
+        []
 
 
-fromMeToLeft : Field -> List Field -> Maybe Field
-fromMeToLeft target lst =
+fromMeToLeft : Field -> List Field -> List Field
+fromMeToLeft currentField lst =
     --go left -> lower number
-    if target.x /= 0 then
-        case List.Extra.find (\f -> target.y == f.y && target.x == f.x) lst of
-            Just found ->
-                Just found
+    let
+        nextField : Field
+        nextField =
+            { currentField | x = currentField.x - 1 }
+    in
+    if nextField.x /= 0 then
+        if
+            lst
+                |> List.Extra.find
+                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                |> Maybe.Extra.isJust
+        then
+            []
 
-            Nothing ->
-                fromMeToLeft { x = target.x - 1, y = target.y } lst
+        else
+            nextField :: fromMeToLeft nextField lst
 
     else
-        Nothing
+        []
 
 
-fromMeToRight : Field -> List Field -> Maybe Field
-fromMeToRight target lst =
+fromMeToRight : Field -> List Field -> List Field
+fromMeToRight currentField lst =
     --go right -> bigger number
-    if target.x <= 8 then
-        case List.Extra.find (\f -> target.y == f.y && target.x == f.x) lst of
-            Just found ->
-                Just found
+    let
+        nextField : Field
+        nextField =
+            { currentField | x = currentField.x + 1 }
+    in
+    if nextField.x <= 8 then
+        if
+            lst
+                |> List.Extra.find
+                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                |> Maybe.Extra.isJust
+        then
+            []
 
-            Nothing ->
-                fromMeToRight { x = target.x + 1, y = target.y } lst
+        else
+            nextField :: fromMeToRight nextField lst
 
     else
-        Nothing
+        []
 
 
-type alias MyClosestFiguresPerDirection =
-    { toTop : Maybe Field
-    , toBottom : Maybe Field
-    , toLeft : Maybe Field
-    , toRight : Maybe Field
-    }
-
-
-getClosestFigures : Field -> List Field -> MyClosestFiguresPerDirection
-getClosestFigures currentField lst =
-    -- returns closest figures in all four directions, up, down, left, right
-    -- if Nothing then your road is clear in that direction
-    { toTop = fromMeToTop currentField lst
-    , toBottom = fromMeToBottom currentField lst
-    , toLeft = fromMeToLeft currentField lst
-    , toRight = fromMeToRight currentField lst
-    }
-
-
-getAllPossibleMovesByAxisForRook : Field -> MyClosestFiguresPerDirection -> List Field
-getAllPossibleMovesByAxisForRook currentField fgPositions =
+getPossibleFieldsToMove : Field -> List Field -> List Field
+getPossibleFieldsToMove currentField lst =
     List.concat
-        [ List.range
-            (fgPositions.toTop
-                |> Maybe.map (\{ x, y } -> { x = x, y = y + 1 })
-                |> Maybe.withDefault { x = currentField.x, y = 1 }
-                |> .y
-            )
-            (currentField.y - 1)
-            |> List.map (\y -> { y = y, x = currentField.x })
-        , List.range
-            (currentField.y + 1)
-            (fgPositions.toBottom
-                |> Maybe.map (\{ x, y } -> { x = x, y = y - 1 })
-                |> Maybe.withDefault { x = currentField.x, y = 8 }
-                |> .y
-            )
-            |> List.map (\y -> { y = y, x = currentField.x })
-        , List.range
-            (fgPositions.toLeft
-                |> Maybe.map (\{ x, y } -> { y = y, x = x + 1 })
-                |> Maybe.withDefault { y = currentField.y, x = 1 }
-                |> .x
-            )
-            (currentField.x - 1)
-            |> List.map (\x -> { y = currentField.y, x = x })
-        , List.range
-            (currentField.x + 1)
-            (fgPositions.toRight
-                |> Maybe.map (\{ x, y } -> { y = y, x = x - 1 })
-                |> Maybe.withDefault { y = currentField.y, x = 8 }
-                |> .x
-            )
-            |> List.map (\x -> { y = currentField.y, x = x })
+        [ fromMeToTop currentField lst
+        , fromMeToBottom currentField lst
+        , fromMeToLeft currentField lst
+        , fromMeToRight currentField lst
         ]
 
 
@@ -637,18 +513,6 @@ update msg model =
                                 nextMoves
                                     |> List.length
                                     |> (==) 0
-
-                            -- nextMoves
-                            --     |> List.filter
-                            --         (\nextMove ->
-                            --             coordinatesToFigure
-                            --                 nextMove.x
-                            --                 nextMove.y
-                            --                 (List.concat [ model.player1, model.player2 ])
-                            --                 |> Maybe.Extra.isJust
-                            --         )
-                            --     |> List.length
-                            --     |> (/=) 0
                         in
                         -- It's IDLE -> Check if someone is blocking your move
                         case figure of
@@ -689,7 +553,9 @@ update msg model =
                                         _ =
                                             Debug.log "It seems that potential next step for this figure is to step over your other figure :( Not possible" ""
                                     in
-                                    ( model, Cmd.none )
+                                    ( { model | error = Just "Your other figure is preventing you to move with this figure" }
+                                    , Cmd.none
+                                    )
 
                                 else
                                     -- It's IDLE -> Choosing figure you want to move
@@ -715,8 +581,8 @@ update msg model =
 
                 Nothing ->
                     case model.possibleNextMoves of
-                        NextMove cp lstOfMoves ->
-                            -- Alright ! We can maybe move figure, let's check if selected field is among allowed fileds !
+                        NextMove previousField lstOfMoves ->
+                            -- Alright ! Maybe we can move figure, let's check if selected field is among allowed fields !
                             let
                                 isOkToMove : Bool
                                 isOkToMove =
@@ -737,17 +603,13 @@ update msg model =
                                                     (\fs ->
                                                         { fs
                                                             | moves =
-                                                                List.concatMap
-                                                                    (\({ x, y } as move) ->
-                                                                        if isEqualPosition cp.x x cp.y y then
-                                                                            { x = desiredOrCurrentPosition.x
-                                                                            , y = desiredOrCurrentPosition.y
-                                                                            }
-                                                                                :: fs.moves
+                                                                if List.head fs.moves == Just previousField then
+                                                                    { x = desiredOrCurrentPosition.x
+                                                                    , y = desiredOrCurrentPosition.y
+                                                                    }
+                                                                        :: fs.moves
 
-                                                                        else
-                                                                            [ move ]
-                                                                    )
+                                                                else
                                                                     fs.moves
                                                         }
                                                     )
