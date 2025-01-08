@@ -60,6 +60,8 @@ startPositionPlayer1 =
     -- , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
     , { figure = Knight, moves = [ { x = 2, y = 1 } ] }
     , { figure = Knight, moves = [ { x = 7, y = 1 } ] }
+
+    -- , { figure = Knight, moves = [ { x = 2, y = 4 } ] }
     , { figure = Bishop, moves = [ { x = 3, y = 1 } ] }
     , { figure = Bishop, moves = [ { x = 6, y = 1 } ] }
     , { figure = King, moves = [ { x = 5, y = 1 } ] }
@@ -104,7 +106,7 @@ startPositionPlayer2 =
     , { figure = Pawn, moves = [ { x = 6, y = 7 } ] }
     , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
     , { figure = Pawn, moves = [ { x = 8, y = 7 } ] }
-    , { figure = Knight, moves = [ { x = 2, y = 8 } ] }
+    , { figure = Knight, moves = [ { x = 2, y = 5 } ] }
     , { figure = Knight, moves = [ { x = 8, y = 8 } ] }
     , { figure = Bishop, moves = [ { x = 3, y = 8 } ] }
     , { figure = Bishop, moves = [ { x = 6, y = 8 } ] }
@@ -138,29 +140,38 @@ startPositionPlayer2 =
 
 calcNextMovesBasedOnFigure : Figure -> Int -> Int -> List FigureState -> List FigureState -> List Field
 calcNextMovesBasedOnFigure fg x y player1 player2 =
-    let
-        positionsOfMyOtherFigures : List Field
-        positionsOfMyOtherFigures =
-            getPositionsOfMyOtherFigures (Field x y) player2
-    in
     case fg of
         Pawn ->
-            let
-                possibleFieldstoMove : List Field
-                possibleFieldstoMove =
-                    moveByAxisPerFigure.pawn
-                        (Field x y)
-                        positionsOfMyOtherFigures
-            in
-            possibleFieldstoMove
+            getXYPositionsOfMyOtherFigures (Field x y) player2
+                --  maybe give me just figure in front
+                |> List.Extra.find
+                    (\f -> y > f.y && y - f.y == 1 && x == f.x)
+                |> Maybe.map (\_ -> [])
+                |> Maybe.withDefault [ { x = x, y = y - 1 } ]
 
         Rook ->
             let
-                possibleFieldstoMove : List Field
-                possibleFieldstoMove =
-                    moveByAxisPerFigure.rook (Field x y) positionsOfMyOtherFigures
+                positionsOfMyOtherFigures : List Field
+                positionsOfMyOtherFigures =
+                    getXYPositionsOfMyOtherFigures (Field x y) player2
+
+                possibleFieldsToMove : List Field
+                possibleFieldsToMove =
+                    movePerFigure.rook (Field x y) positionsOfMyOtherFigures
             in
-            possibleFieldstoMove
+            possibleFieldsToMove
+
+        Knight ->
+            let
+                positionsOfMyOtherFigures : List Field
+                positionsOfMyOtherFigures =
+                    getPositionsOfMyOtherFiguresKnight (Field x y) player2
+
+                possibleFieldsToMove : List Field
+                possibleFieldsToMove =
+                    movePerFigure.knight (Field x y) positionsOfMyOtherFigures
+            in
+            possibleFieldsToMove
 
         _ ->
             []
@@ -168,7 +179,9 @@ calcNextMovesBasedOnFigure fg x y player1 player2 =
 
 figureElement : String -> Html msg
 figureElement txt =
-    Html.div [ HA.class "font-extrabold" ] [ Html.text txt ]
+    Html.div
+        [ HA.class "font-extrabold" ]
+        [ Html.text txt ]
 
 
 figureToHtml : Maybe Figure -> Html msg
@@ -295,8 +308,8 @@ getPossitionOfActiveFigure pnm =
             Nothing
 
 
-getPositionsOfMyOtherFigures : Field -> List FigureState -> List Field
-getPositionsOfMyOtherFigures currentField myTeam =
+getXYPositionsOfMyOtherFigures : Field -> List FigureState -> List Field
+getXYPositionsOfMyOtherFigures currentField myTeam =
     myTeam
         |> List.filter
             (\fs ->
@@ -320,154 +333,257 @@ getPositionsOfMyOtherFigures currentField myTeam =
         |> List.filterMap identity
 
 
-type alias MoveByAxisPerFigure =
-    { pawn : Field -> List Field -> List Field
-    , rook : Axis -> Field -> List Field -> List Field
-    , knight : ()
+getPositionsOfMyOtherFiguresKnight : Field -> List FigureState -> List Field
+getPositionsOfMyOtherFiguresKnight currentField myTeam =
+    myTeam
+        |> List.filter
+            (\fs ->
+                fs.moves
+                    |> List.head
+                    |> Maybe.Extra.filter
+                        (\f ->
+                            -- up left/right
+                            ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y - 2 == f.y)
+                                -- down left/right
+                                || ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y + 2 == f.y)
+                                -- left up/bottom
+                                || ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x - 2 == f.x)
+                                || -- right up/bottom
+                                   ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x + 2 == f.x)
+                        )
+                    |> Maybe.Extra.isJust
+            )
+        |> List.map (\fs -> fs.moves |> List.head)
+        |> List.filterMap identity
+
+
+type alias MovePerFigure =
+    { pawn : ()
+    , rook : Field -> List Field -> List Field
+    , knight : Field -> List Field -> List Field
     , bishop : ()
     , queen : ()
     , king : ()
     }
 
 
-getAllPossibleMovesByAxisForPawn : Field -> List Field -> List Field
-getAllPossibleMovesByAxisForPawn currentField positionsOfMyOtherFigures =
-    let
-        obstacle : Maybe Field
-        obstacle =
-            -- maybe directly in front of us
-            positionsOfMyOtherFigures
-                |> List.Extra.find
-                    (\f -> currentField.y > f.y && currentField.y - f.y == 1)
-    in
-    if obstacle |> Maybe.Extra.isJust then
-        []
-
-    else
-        [ { x = currentField.x
-          , y = currentField.y - 1
-          }
-        ]
-
-
-moveByAxisPerFigure =
-    { pawn = getAllPossibleMovesByAxisForPawn
-    , rook = getPossibleFieldsToMove
-    , knight = ()
+movePerFigure =
+    { pawn = ()
+    , rook = getAllPossibleMovesForRook
+    , knight = getAllPossibleMovesForKnight
     , bishop = ()
     , queen = ()
     , king = ()
     }
 
 
-
--- fromMeToTop : Field -> List Field -> Maybe Field
-
-
-fromMeToTop : Field -> List Field -> List Field
-fromMeToTop currentField lst =
-    --go up -> lower number
+getAllPossibleMovesForRook : Field -> List Field -> List Field
+getAllPossibleMovesForRook myPosition positionsOfMyOtherFigures =
     let
-        nextField : Field
-        nextField =
-            { currentField | y = currentField.y - 1 }
+        fromMeToTop : Field -> List Field -> List Field
+        fromMeToTop currentField lst =
+            --go up -> lower number
+            let
+                nextField : Field
+                nextField =
+                    { currentField | y = currentField.y - 1 }
+            in
+            if nextField.y /= 0 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    -- closest figure found -> exit
+                    []
+
+                else
+                    nextField :: fromMeToTop nextField lst
+
+            else
+                []
+
+        fromMeToBottom : Field -> List Field -> List Field
+        fromMeToBottom currentField lst =
+            --go down -> bigger number
+            let
+                nextField : Field
+                nextField =
+                    { currentField | y = currentField.y + 1 }
+            in
+            if nextField.y <= 8 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    []
+
+                else
+                    nextField :: fromMeToBottom nextField lst
+
+            else
+                []
+
+        fromMeToLeft : Field -> List Field -> List Field
+        fromMeToLeft currentField lst =
+            --go left -> lower number
+            let
+                nextField : Field
+                nextField =
+                    { currentField | x = currentField.x - 1 }
+            in
+            if nextField.x /= 0 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    []
+
+                else
+                    nextField :: fromMeToLeft nextField lst
+
+            else
+                []
+
+        fromMeToRight : Field -> List Field -> List Field
+        fromMeToRight currentField lst =
+            --go right -> bigger number
+            let
+                nextField : Field
+                nextField =
+                    { currentField | x = currentField.x + 1 }
+            in
+            if nextField.x <= 8 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    []
+
+                else
+                    nextField :: fromMeToRight nextField lst
+
+            else
+                []
     in
-    if nextField.y /= 0 then
-        if
-            lst
-                |> List.Extra.find
-                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
-                |> Maybe.Extra.isJust
-        then
-            -- closest figure found -> exit
-            []
-
-        else
-            nextField :: fromMeToTop nextField lst
-
-    else
-        []
-
-
-fromMeToBottom : Field -> List Field -> List Field
-fromMeToBottom currentField lst =
-    --go down -> bigger number
-    let
-        nextField : Field
-        nextField =
-            { currentField | y = currentField.y + 1 }
-    in
-    if nextField.y <= 8 then
-        if
-            lst
-                |> List.Extra.find
-                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
-                |> Maybe.Extra.isJust
-        then
-            []
-
-        else
-            nextField :: fromMeToBottom nextField lst
-
-    else
-        []
-
-
-fromMeToLeft : Field -> List Field -> List Field
-fromMeToLeft currentField lst =
-    --go left -> lower number
-    let
-        nextField : Field
-        nextField =
-            { currentField | x = currentField.x - 1 }
-    in
-    if nextField.x /= 0 then
-        if
-            lst
-                |> List.Extra.find
-                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
-                |> Maybe.Extra.isJust
-        then
-            []
-
-        else
-            nextField :: fromMeToLeft nextField lst
-
-    else
-        []
-
-
-fromMeToRight : Field -> List Field -> List Field
-fromMeToRight currentField lst =
-    --go right -> bigger number
-    let
-        nextField : Field
-        nextField =
-            { currentField | x = currentField.x + 1 }
-    in
-    if nextField.x <= 8 then
-        if
-            lst
-                |> List.Extra.find
-                    (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
-                |> Maybe.Extra.isJust
-        then
-            []
-
-        else
-            nextField :: fromMeToRight nextField lst
-
-    else
-        []
-
-
-getPossibleFieldsToMove : Field -> List Field -> List Field
-getPossibleFieldsToMove currentField lst =
     List.concat
-        [ fromMeToTop currentField lst
-        , fromMeToBottom currentField lst
-        , fromMeToLeft currentField lst
-        , fromMeToRight currentField lst
+        [ fromMeToTop myPosition positionsOfMyOtherFigures
+        , fromMeToBottom myPosition positionsOfMyOtherFigures
+        , fromMeToLeft myPosition positionsOfMyOtherFigures
+        , fromMeToRight myPosition positionsOfMyOtherFigures
+        ]
+
+
+getAllPossibleMovesForKnight myPosition positionsOfMyOtherFigures =
+    let
+        fromMeToTop : Field -> List Field -> List Field
+        fromMeToTop currentField lst =
+            --go up -> lower number
+            let
+                nextFields : List Field
+                nextFields =
+                    [ -- 2 up 1 right
+                      { x = currentField.x + 1, y = currentField.y - 2 }
+
+                    -- 2 up 1 left
+                    , { x = currentField.x - 1, y = currentField.y - 2 }
+                    ]
+            in
+            List.filter
+                (\f ->
+                    lst
+                        |> List.any
+                            (\f1 ->
+                                isEqualPosition f.x f1.x f.y f1.y
+                            )
+                        |> not
+                )
+                nextFields
+
+        fromMeToBottom : Field -> List Field -> List Field
+        fromMeToBottom currentField lst =
+            --go down -> bigger number
+            let
+                nextFields : List Field
+                nextFields =
+                    [ -- 2 down 1 right
+                      { x = currentField.x + 1, y = currentField.y + 2 }
+
+                    -- 2 down 1 left
+                    , { x = currentField.x - 1, y = currentField.y + 2 }
+                    ]
+            in
+            List.filter
+                (\f ->
+                    lst
+                        |> List.any
+                            (\f1 ->
+                                isEqualPosition f.x f1.x f.y f1.y
+                            )
+                        |> not
+                )
+                nextFields
+
+        fromMeToLeft : Field -> List Field -> List Field
+        fromMeToLeft currentField lst =
+            --go left -> lower number
+            let
+                nextFields : List Field
+                nextFields =
+                    [ -- 2 left 1 top
+                      { x = currentField.x - 2, y = currentField.y - 1 }
+
+                    -- 2 left 1 down
+                    , { x = currentField.x - 2, y = currentField.y + 1 }
+                    ]
+            in
+            List.filter
+                (\f ->
+                    lst
+                        |> List.any
+                            (\f1 ->
+                                isEqualPosition f.x f1.x f.y f1.y
+                            )
+                        |> not
+                )
+                nextFields
+
+        fromMeToRight : Field -> List Field -> List Field
+        fromMeToRight currentField lst =
+            --go right -> bigger number
+            let
+                nextFields : List Field
+                nextFields =
+                    [ -- 2 left 1 top
+                      { x = currentField.x + 2, y = currentField.y - 1 }
+
+                    -- 2 left 1 down
+                    , { x = currentField.x + 2, y = currentField.y + 1 }
+                    ]
+            in
+            List.filter
+                (\f ->
+                    lst
+                        |> List.any
+                            (\f1 ->
+                                isEqualPosition f.x f1.x f.y f1.y
+                            )
+                        |> not
+                )
+                nextFields
+    in
+    List.concat
+        [ fromMeToTop myPosition positionsOfMyOtherFigures
+        , fromMeToBottom myPosition positionsOfMyOtherFigures
+        , fromMeToLeft myPosition positionsOfMyOtherFigures
+        , fromMeToRight myPosition positionsOfMyOtherFigures
         ]
 
 
@@ -507,69 +623,34 @@ update msg model =
                                     |> (==) 0
                         in
                         -- It's IDLE -> Check if someone is blocking your move
-                        case figure of
-                            Pawn ->
-                                if cannotMove then
-                                    -- PAWN: Ilegal move -> Your other figure is preventing you to move
-                                    let
-                                        _ =
-                                            Debug.log "It seems that potential next step for this figure is to step over your other figure :( Not possible" ""
-                                    in
-                                    ( { model | error = Just "Your other figure is preventing you to move with this figure" }
+                        if cannotMove then
+                            -- PAWN: Ilegal move -> Your other figure is preventing you to move
+                            let
+                                _ =
+                                    Debug.log "It seems that potential next step for this figure is to step over your other figure :( Not possible" ""
+                            in
+                            ( { model | error = Just "Your other figure is preventing you to move with this figure" }
+                            , Cmd.none
+                            )
+
+                        else
+                            -- It's IDLE -> Choosing figure you want to move
+                            case model.possibleNextMoves of
+                                Idle ->
+                                    ( { model
+                                        | possibleNextMoves =
+                                            NextMove
+                                                { x = desiredOrCurrentPosition.x
+                                                , y = desiredOrCurrentPosition.y
+                                                }
+                                                nextMoves
+                                        , error = Nothing
+                                      }
                                     , Cmd.none
                                     )
 
-                                else
-                                    -- It's IDLE -> Choosing figure you want to move
-                                    case model.possibleNextMoves of
-                                        Idle ->
-                                            ( { model
-                                                | possibleNextMoves =
-                                                    NextMove
-                                                        { x = desiredOrCurrentPosition.x
-                                                        , y = desiredOrCurrentPosition.y
-                                                        }
-                                                        nextMoves
-                                                , error = Nothing
-                                              }
-                                            , Cmd.none
-                                            )
-
-                                        NextMove _ lstOfMoves ->
-                                            ( model, Cmd.none )
-
-                            Rook ->
-                                if cannotMove then
-                                    -- Ilegal move -> Your other figure is preventing you to move
-                                    let
-                                        _ =
-                                            Debug.log "It seems that potential next step for this figure is to step over your other figure :( Not possible" ""
-                                    in
-                                    ( { model | error = Just "Your other figure is preventing you to move with this figure" }
-                                    , Cmd.none
-                                    )
-
-                                else
-                                    -- It's IDLE -> Choosing figure you want to move
-                                    case model.possibleNextMoves of
-                                        Idle ->
-                                            ( { model
-                                                | possibleNextMoves =
-                                                    NextMove
-                                                        { x = desiredOrCurrentPosition.x
-                                                        , y = desiredOrCurrentPosition.y
-                                                        }
-                                                        nextMoves
-                                                , error = Nothing
-                                              }
-                                            , Cmd.none
-                                            )
-
-                                        NextMove _ lstOfMoves ->
-                                            ( model, Cmd.none )
-
-                            _ ->
-                                ( model, Cmd.none )
+                                NextMove _ lstOfMoves ->
+                                    ( model, Cmd.none )
 
                 Nothing ->
                     case model.possibleNextMoves of
