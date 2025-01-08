@@ -138,45 +138,6 @@ startPositionPlayer2 =
 --     ]
 
 
-calcNextMovesBasedOnFigure : Figure -> Int -> Int -> List FigureState -> List FigureState -> List Field
-calcNextMovesBasedOnFigure fg x y player1 player2 =
-    case fg of
-        Pawn ->
-            getXYPositionsOfMyOtherFigures (Field x y) player2
-                --  maybe give me just figure in front
-                |> List.Extra.find
-                    (\f -> y > f.y && y - f.y == 1 && x == f.x)
-                |> Maybe.map (\_ -> [])
-                |> Maybe.withDefault [ { x = x, y = y - 1 } ]
-
-        Rook ->
-            let
-                positionsOfMyOtherFigures : List Field
-                positionsOfMyOtherFigures =
-                    getXYPositionsOfMyOtherFigures (Field x y) player2
-
-                possibleFieldsToMove : List Field
-                possibleFieldsToMove =
-                    movePerFigure.rook (Field x y) positionsOfMyOtherFigures
-            in
-            possibleFieldsToMove
-
-        Knight ->
-            let
-                positionsOfMyOtherFigures : List Field
-                positionsOfMyOtherFigures =
-                    getPositionsOfMyOtherFiguresKnight (Field x y) player2
-
-                possibleFieldsToMove : List Field
-                possibleFieldsToMove =
-                    movePerFigure.knight (Field x y) positionsOfMyOtherFigures
-            in
-            possibleFieldsToMove
-
-        _ ->
-            []
-
-
 figureElement : String -> Html msg
 figureElement txt =
     Html.div
@@ -308,73 +269,65 @@ getPossitionOfActiveFigure pnm =
             Nothing
 
 
-getXYPositionsOfMyOtherFigures : Field -> List FigureState -> List Field
-getXYPositionsOfMyOtherFigures currentField myTeam =
+getPossibleFieldsToMove : Figure -> Field -> List FigureState -> List Field
+getPossibleFieldsToMove fg currentField myTeam =
     myTeam
         |> List.filter
             (\fs ->
                 fs.moves
                     |> List.head
-                    -- have (other then me) Figures in the same column / row
-                    |> Maybe.Extra.filter
-                        (\m ->
-                            m.x
-                                == currentField.x
-                                && m.y
-                                /= currentField.y
-                                || m.y
-                                == currentField.y
-                                && m.x
-                                /= currentField.x
-                        )
-                    |> Maybe.Extra.isJust
-            )
-        |> List.map (\fs -> fs.moves |> List.head)
-        |> List.filterMap identity
-
-
-getPositionsOfMyOtherFiguresKnight : Field -> List FigureState -> List Field
-getPositionsOfMyOtherFiguresKnight currentField myTeam =
-    myTeam
-        |> List.filter
-            (\fs ->
-                fs.moves
-                    |> List.head
+                    -- have opponent Figures somewhere on my path
                     |> Maybe.Extra.filter
                         (\f ->
-                            -- up left/right
-                            ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y - 2 == f.y)
-                                -- down left/right
-                                || ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y + 2 == f.y)
-                                -- left up/bottom
-                                || ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x - 2 == f.x)
-                                || -- right up/bottom
-                                   ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x + 2 == f.x)
+                            case fg of
+                                Pawn ->
+                                    currentField.y - f.y == 1 && currentField.x == f.x
+
+                                Rook ->
+                                    f.x
+                                        == currentField.x
+                                        && f.y
+                                        /= currentField.y
+                                        || f.y
+                                        == currentField.y
+                                        && f.x
+                                        /= currentField.x
+
+                                Knight ->
+                                    -- up left/right
+                                    ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y - 2 == f.y)
+                                        -- down left/right
+                                        || ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y + 2 == f.y)
+                                        -- left up/bottom
+                                        || ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x - 2 == f.x)
+                                        || -- right up/bottom
+                                           ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x + 2 == f.x)
+
+                                _ ->
+                                    False
                         )
                     |> Maybe.Extra.isJust
             )
         |> List.map (\fs -> fs.moves |> List.head)
         |> List.filterMap identity
+        |> (\opponentFieldLst ->
+                case fg of
+                    Pawn ->
+                        if List.isEmpty opponentFieldLst then
+                            [ { x = currentField.x, y = currentField.y - 1 } ]
 
+                        else
+                            []
 
-type alias MovePerFigure =
-    { pawn : ()
-    , rook : Field -> List Field -> List Field
-    , knight : Field -> List Field -> List Field
-    , bishop : ()
-    , queen : ()
-    , king : ()
-    }
+                    Rook ->
+                        getAllPossibleMovesForRook currentField opponentFieldLst
 
+                    Knight ->
+                        getAllPossibleMovesForKnight currentField opponentFieldLst
 
-movePerFigure =
-    { pawn = ()
-    , rook = getAllPossibleMovesForRook
-    , knight = getAllPossibleMovesForKnight
-    , bishop = ()
-    , queen = ()
-    , king = ()
-    }
+                    _ ->
+                        opponentFieldLst
+           )
 
 
 getAllPossibleMovesForRook : Field -> List Field -> List Field
@@ -481,6 +434,7 @@ getAllPossibleMovesForRook myPosition positionsOfMyOtherFigures =
         ]
 
 
+getAllPossibleMovesForKnight : Field -> List Field -> List Field
 getAllPossibleMovesForKnight myPosition positionsOfMyOtherFigures =
     let
         fromMeToTop : Field -> List Field -> List Field
@@ -609,11 +563,12 @@ update msg model =
                         let
                             nextMoves : List Field
                             nextMoves =
-                                calcNextMovesBasedOnFigure
+                                getPossibleFieldsToMove
                                     figure
-                                    desiredOrCurrentPosition.x
-                                    desiredOrCurrentPosition.y
-                                    model.player1
+                                    (Field
+                                        desiredOrCurrentPosition.x
+                                        desiredOrCurrentPosition.y
+                                    )
                                     model.player2
 
                             cannotMove : Bool
