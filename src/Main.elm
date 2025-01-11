@@ -1,7 +1,6 @@
 module Main exposing (main)
 
 import Browser
-import Dict
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -94,22 +93,24 @@ startPositionPlayer1 =
 startPositionPlayer2 : List FigureState
 startPositionPlayer2 =
     [ { figure = Rook, moves = [ { x = 4, y = 7 } ] }
-    , { figure = Rook, moves = [ { x = 7, y = 3 } ] }
-    , { figure = Rook, moves = [ { x = 7, y = 8 } ] }
+    , { figure = Rook, moves = [ { x = 7, y = 5 } ] }
+    , { figure = Rook, moves = [ { x = 6, y = 8 } ] }
     , { figure = Rook, moves = [ { x = 5, y = 4 } ] }
     , { figure = Pawn, moves = [ { x = 8, y = 3 } ] }
-    , { figure = Pawn, moves = [ { x = 4, y = 5 } ] }
-    , { figure = Pawn, moves = [ { x = 6, y = 5 } ] }
     , { figure = Pawn, moves = [ { x = 5, y = 3 } ] }
-    , { figure = Pawn, moves = [ { x = 1, y = 5 } ] }
-    , { figure = Pawn, moves = [ { x = 5, y = 7 } ] }
+    , { figure = Pawn, moves = [ { x = 1, y = 6 } ] }
+
+    -- , { figure = Pawn, moves = [ { x = 5, y = 3 } ] }
+    -- , { figure = Pawn, moves = [ { x = 1, y = 3 } ] }
+    -- , { figure = Pawn, moves = [ { x = 5, y = 7 } ] }
     , { figure = Pawn, moves = [ { x = 6, y = 7 } ] }
     , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
-    , { figure = Pawn, moves = [ { x = 8, y = 7 } ] }
-    , { figure = Knight, moves = [ { x = 2, y = 5 } ] }
+    , { figure = Pawn, moves = [ { x = 8, y = 4 } ] }
+    , { figure = Knight, moves = [ { x = 1, y = 4 } ] }
+    , { figure = Bishop, moves = [ { x = 3, y = 4 } ] }
     , { figure = Knight, moves = [ { x = 8, y = 8 } ] }
-    , { figure = Bishop, moves = [ { x = 3, y = 8 } ] }
-    , { figure = Bishop, moves = [ { x = 6, y = 8 } ] }
+    , { figure = Knight, moves = [ { x = 3, y = 6 } ] }
+    , { figure = Bishop, moves = [ { x = 6, y = 6 } ] }
 
     -- , { figure = King, moves = [ { x = 5, y = 8 } ] }
     , { figure = Queen, moves = [ { x = 4, y = 8 } ] }
@@ -269,6 +270,15 @@ getPossitionOfActiveFigure pnm =
             Nothing
 
 
+anyRange : Int -> Int -> List Int
+anyRange n1 n2 =
+    if n1 > n2 then
+        List.range n2 n1
+
+    else
+        List.range n1 n2
+
+
 getPossibleFieldsToMove : Figure -> Field -> List FigureState -> List Field
 getPossibleFieldsToMove fg currentField myTeam =
     myTeam
@@ -276,9 +286,9 @@ getPossibleFieldsToMove fg currentField myTeam =
             (\fs ->
                 fs.moves
                     |> List.head
-                    -- have opponent Figures somewhere on my path
-                    |> Maybe.Extra.filter
+                    |> Maybe.map
                         (\f ->
+                            -- mapping over opponent standing on potential next fields
                             case fg of
                                 Pawn ->
                                     currentField.y - f.y == 1 && currentField.x == f.x
@@ -303,10 +313,90 @@ getPossibleFieldsToMove fg currentField myTeam =
                                         || -- right up/bottom
                                            ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x + 2 == f.x)
 
+                                Bishop ->
+                                    {-
+                                        my field: 3,5
+                                       -top-right: 4,4 - 5,3 - 6,2 - 7,1
+                                       -top-left: 2,4 - 1,3
+                                       -bottom-right: 4,6 - 5,7 - 6,8
+                                       -bottom-left: 2,6 - 1,7
+                                    -}
+                                    -- bottom/left corner
+                                    let
+                                        topRight =
+                                            List.map2
+                                                (\x y ->
+                                                    if x == f.x && y == f.y then
+                                                        Just { x = x, y = y }
+
+                                                    else
+                                                        Nothing
+                                                )
+                                                (anyRange (currentField.x + 1) 8)
+                                                (anyRange (currentField.y - 1) 1
+                                                    |> List.reverse
+                                                )
+                                                |> List.filterMap identity
+
+                                        topLeft =
+                                            -- I am at top-left
+                                            List.map2
+                                                (\x y ->
+                                                    if x == f.x && y == f.y then
+                                                        Just { x = x, y = y }
+
+                                                    else
+                                                        Nothing
+                                                )
+                                                (anyRange (currentField.x - 1) 1
+                                                    |> List.reverse
+                                                )
+                                                (anyRange (currentField.y - 1) 1
+                                                    |> List.reverse
+                                                )
+                                                |> List.filterMap identity
+
+                                        bottomRight =
+                                            List.map2
+                                                (\x y ->
+                                                    if x == f.x && y == f.y then
+                                                        Just { x = x, y = y }
+
+                                                    else
+                                                        Nothing
+                                                )
+                                                (anyRange (currentField.x + 1) 8)
+                                                (anyRange (currentField.y + 1) 8)
+                                                |> List.filterMap identity
+
+                                        bottomLeft =
+                                            List.map2
+                                                (\x y ->
+                                                    if x == f.x && y == f.y then
+                                                        Just { x = x, y = y }
+
+                                                    else
+                                                        Nothing
+                                                )
+                                                (anyRange (currentField.x - 1) 1
+                                                    |> List.reverse
+                                                )
+                                                (anyRange (currentField.y + 1) 8)
+                                                |> List.filterMap identity
+                                    in
+                                    List.concat
+                                        [ topRight
+                                        , topLeft
+                                        , bottomRight
+                                        , bottomLeft
+                                        ]
+                                        |> List.length
+                                        |> (/=) 0
+
                                 _ ->
                                     False
                         )
-                    |> Maybe.Extra.isJust
+                    |> Maybe.withDefault False
             )
         |> List.map (\fs -> fs.moves |> List.head)
         |> List.filterMap identity
@@ -324,6 +414,9 @@ getPossibleFieldsToMove fg currentField myTeam =
 
                     Knight ->
                         getAllPossibleMovesForKnight currentField opponentFieldLst
+
+                    Bishop ->
+                        getAllPossibleMovesForBishop currentField opponentFieldLst
 
                     _ ->
                         opponentFieldLst
@@ -541,6 +634,113 @@ getAllPossibleMovesForKnight myPosition positionsOfMyOtherFigures =
         ]
 
 
+getAllPossibleMovesForBishop : Field -> List Field -> List Field
+getAllPossibleMovesForBishop myPosition positionsOfMyOtherFigures =
+    let
+        fromMeToTopRight : Field -> List Field -> List Field
+        fromMeToTopRight currentField lst =
+            --go up/right -> lower y, bigger x
+            let
+                nextField : Field
+                nextField =
+                    { x = currentField.x + 1, y = currentField.y - 1 }
+            in
+            if nextField.y >= 1 || nextField.x <= 8 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    -- closest figure found -> exit
+                    []
+
+                else
+                    nextField :: fromMeToTopRight nextField lst
+
+            else
+                []
+
+        fromMeToBottomRight : Field -> List Field -> List Field
+        fromMeToBottomRight currentField lst =
+            --go bottom/right -> bigger y, bigger x
+            let
+                nextField : Field
+                nextField =
+                    { x = currentField.x + 1, y = currentField.y + 1 }
+            in
+            if nextField.y <= 8 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    -- closest figure found -> exit
+                    []
+
+                else
+                    nextField :: fromMeToBottomRight nextField lst
+
+            else
+                []
+
+        fromMeToTopLeft : Field -> List Field -> List Field
+        fromMeToTopLeft currentField lst =
+            --go top/left -> bigger y, smaller x
+            let
+                nextField : Field
+                nextField =
+                    { x = currentField.x - 1, y = currentField.y - 1 }
+            in
+            if nextField.y >= 1 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    -- closest figure found -> exit
+                    []
+
+                else
+                    nextField :: fromMeToTopLeft nextField lst
+
+            else
+                []
+
+        fromMeToBottomLeft : Field -> List Field -> List Field
+        fromMeToBottomLeft currentField lst =
+            --go top/left -> bigger y, smaller x
+            let
+                nextField : Field
+                nextField =
+                    { x = currentField.x - 1, y = currentField.y + 1 }
+            in
+            if nextField.y <= 8 then
+                if
+                    lst
+                        |> List.Extra.find
+                            (\f -> isEqualPosition nextField.x f.x nextField.y f.y)
+                        |> Maybe.Extra.isJust
+                then
+                    -- closest figure found -> exit
+                    []
+
+                else
+                    nextField :: fromMeToBottomLeft nextField lst
+
+            else
+                []
+    in
+    List.concat
+        [ fromMeToTopRight myPosition positionsOfMyOtherFigures
+        , fromMeToBottomRight myPosition positionsOfMyOtherFigures
+        , fromMeToTopLeft myPosition positionsOfMyOtherFigures
+        , fromMeToBottomLeft myPosition positionsOfMyOtherFigures
+        ]
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -720,7 +920,7 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
         , HA.class <|
             "relative cursor-pointer flex w-[100px] h-[100px]"
                 ++ (if isPossibleNextMove then
-                        " bg-green-100"
+                        " bg-green-100 text-black"
 
                     else
                         ""
@@ -731,10 +931,10 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
                                 " border-2 border-pink-400"
 
                             else
-                                " border border-black"
+                                " border border-white"
 
                         Nothing ->
-                            " border border-black"
+                            " border border-white"
                    )
         ]
         [ Html.div
@@ -771,7 +971,7 @@ viewRows model colNum =
 viewColumns : Model -> Html Msg
 viewColumns model =
     Html.div
-        [ HA.class "flex flex-col border border-black" ]
+        [ HA.class "flex flex-col border border-white" ]
         (List.repeat number_of_columns (viewRows model)
             |> List.indexedMap (\i el -> el (i + 1))
         )
