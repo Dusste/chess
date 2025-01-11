@@ -281,13 +281,14 @@ anyRange n1 n2 =
 
 isOccupiedFieldsXY : Field -> Int -> Int -> Bool
 isOccupiedFieldsXY currentField xx yy =
-    ((currentField.x + 1 == xx || currentField.x - 1 == xx) && currentField.y - 2 == yy)
-        -- down left/right
-        || ((currentField.x + 1 == xx || currentField.x - 1 == xx) && currentField.y + 2 == yy)
-        -- left up/bottom
-        || ((currentField.y + 1 == yy || currentField.y - 1 == yy) && currentField.x - 2 == xx)
-        || -- right up/bottom
-           ((currentField.y + 1 == yy || currentField.y - 1 == yy) && currentField.x + 2 == xx)
+    xx
+        == currentField.x
+        && yy
+        /= currentField.y
+        || yy
+        == currentField.y
+        && xx
+        /= currentField.x
 
 
 isOccupiedFieldsDiagonaly : Field -> Int -> Int -> Bool
@@ -387,18 +388,16 @@ getPossibleFieldsToMove fg currentField myTeam =
                                     currentField.y - f.y == 1 && currentField.x == f.x
 
                                 Rook ->
-                                    f.x
-                                        == currentField.x
-                                        && f.y
-                                        /= currentField.y
-                                        || f.y
-                                        == currentField.y
-                                        && f.x
-                                        /= currentField.x
+                                    isOccupiedFieldsXY currentField f.x f.y
 
                                 Knight ->
-                                    -- up left/right
-                                    isOccupiedFieldsXY currentField f.x f.y
+                                    ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y - 2 == f.y)
+                                        -- down left/right
+                                        || ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y + 2 == f.y)
+                                        -- left up/bottom
+                                        || ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x - 2 == f.x)
+                                        || -- right up/bottom
+                                           ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x + 2 == f.x)
 
                                 Bishop ->
                                     isOccupiedFieldsDiagonaly currentField f.x f.y
