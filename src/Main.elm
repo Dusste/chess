@@ -95,7 +95,7 @@ startPositionPlayer2 =
     [ { figure = Rook, moves = [ { x = 4, y = 7 } ] }
     , { figure = Rook, moves = [ { x = 7, y = 5 } ] }
     , { figure = Rook, moves = [ { x = 6, y = 8 } ] }
-    , { figure = Rook, moves = [ { x = 5, y = 4 } ] }
+    , { figure = Rook, moves = [ { x = 4, y = 3 } ] }
     , { figure = Pawn, moves = [ { x = 8, y = 3 } ] }
     , { figure = Pawn, moves = [ { x = 5, y = 3 } ] }
     , { figure = Pawn, moves = [ { x = 1, y = 6 } ] }
@@ -110,10 +110,10 @@ startPositionPlayer2 =
     , { figure = Bishop, moves = [ { x = 3, y = 4 } ] }
     , { figure = Knight, moves = [ { x = 8, y = 8 } ] }
     , { figure = Knight, moves = [ { x = 3, y = 6 } ] }
-    , { figure = Bishop, moves = [ { x = 6, y = 6 } ] }
+    , { figure = Bishop, moves = [ { x = 6, y = 7 } ] }
 
     -- , { figure = King, moves = [ { x = 5, y = 8 } ] }
-    , { figure = Queen, moves = [ { x = 4, y = 8 } ] }
+    , { figure = Queen, moves = [ { x = 5, y = 5 } ] }
     ]
 
 
@@ -279,6 +279,99 @@ anyRange n1 n2 =
         List.range n1 n2
 
 
+isOccupiedFieldsXY : Field -> Int -> Int -> Bool
+isOccupiedFieldsXY currentField xx yy =
+    ((currentField.x + 1 == xx || currentField.x - 1 == xx) && currentField.y - 2 == yy)
+        -- down left/right
+        || ((currentField.x + 1 == xx || currentField.x - 1 == xx) && currentField.y + 2 == yy)
+        -- left up/bottom
+        || ((currentField.y + 1 == yy || currentField.y - 1 == yy) && currentField.x - 2 == xx)
+        || -- right up/bottom
+           ((currentField.y + 1 == yy || currentField.y - 1 == yy) && currentField.x + 2 == xx)
+
+
+isOccupiedFieldsDiagonaly : Field -> Int -> Int -> Bool
+isOccupiedFieldsDiagonaly currentField xx yy =
+    {-
+        my field: 3,5
+       -top-right: 4,4 - 5,3 - 6,2 - 7,1
+       -top-left: 2,4 - 1,3
+       -bottom-right: 4,6 - 5,7 - 6,8
+       -bottom-left: 2,6 - 1,7
+    -}
+    -- bottom/left corner
+    let
+        topRight =
+            List.map2
+                (\x y ->
+                    if x == xx && y == yy then
+                        Just { x = x, y = y }
+
+                    else
+                        Nothing
+                )
+                (anyRange (currentField.x + 1) 8)
+                (anyRange (currentField.y - 1) 1
+                    |> List.reverse
+                )
+                |> List.filterMap identity
+
+        topLeft =
+            -- I am at top-left
+            List.map2
+                (\x y ->
+                    if x == xx && y == yy then
+                        Just { x = x, y = y }
+
+                    else
+                        Nothing
+                )
+                (anyRange (currentField.x - 1) 1
+                    |> List.reverse
+                )
+                (anyRange (currentField.y - 1) 1
+                    |> List.reverse
+                )
+                |> List.filterMap identity
+
+        bottomRight =
+            List.map2
+                (\x y ->
+                    if x == xx && y == yy then
+                        Just { x = x, y = y }
+
+                    else
+                        Nothing
+                )
+                (anyRange (currentField.x + 1) 8)
+                (anyRange (currentField.y + 1) 8)
+                |> List.filterMap identity
+
+        bottomLeft =
+            List.map2
+                (\x y ->
+                    if x == xx && y == yy then
+                        Just { x = x, y = y }
+
+                    else
+                        Nothing
+                )
+                (anyRange (currentField.x - 1) 1
+                    |> List.reverse
+                )
+                (anyRange (currentField.y + 1) 8)
+                |> List.filterMap identity
+    in
+    List.concat
+        [ topRight
+        , topLeft
+        , bottomRight
+        , bottomLeft
+        ]
+        |> List.length
+        |> (/=) 0
+
+
 getPossibleFieldsToMove : Figure -> Field -> List FigureState -> List Field
 getPossibleFieldsToMove fg currentField myTeam =
     myTeam
@@ -305,93 +398,14 @@ getPossibleFieldsToMove fg currentField myTeam =
 
                                 Knight ->
                                     -- up left/right
-                                    ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y - 2 == f.y)
-                                        -- down left/right
-                                        || ((currentField.x + 1 == f.x || currentField.x - 1 == f.x) && currentField.y + 2 == f.y)
-                                        -- left up/bottom
-                                        || ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x - 2 == f.x)
-                                        || -- right up/bottom
-                                           ((currentField.y + 1 == f.y || currentField.y - 1 == f.y) && currentField.x + 2 == f.x)
+                                    isOccupiedFieldsXY currentField f.x f.y
 
                                 Bishop ->
-                                    {-
-                                        my field: 3,5
-                                       -top-right: 4,4 - 5,3 - 6,2 - 7,1
-                                       -top-left: 2,4 - 1,3
-                                       -bottom-right: 4,6 - 5,7 - 6,8
-                                       -bottom-left: 2,6 - 1,7
-                                    -}
-                                    -- bottom/left corner
-                                    let
-                                        topRight =
-                                            List.map2
-                                                (\x y ->
-                                                    if x == f.x && y == f.y then
-                                                        Just { x = x, y = y }
+                                    isOccupiedFieldsDiagonaly currentField f.x f.y
 
-                                                    else
-                                                        Nothing
-                                                )
-                                                (anyRange (currentField.x + 1) 8)
-                                                (anyRange (currentField.y - 1) 1
-                                                    |> List.reverse
-                                                )
-                                                |> List.filterMap identity
-
-                                        topLeft =
-                                            -- I am at top-left
-                                            List.map2
-                                                (\x y ->
-                                                    if x == f.x && y == f.y then
-                                                        Just { x = x, y = y }
-
-                                                    else
-                                                        Nothing
-                                                )
-                                                (anyRange (currentField.x - 1) 1
-                                                    |> List.reverse
-                                                )
-                                                (anyRange (currentField.y - 1) 1
-                                                    |> List.reverse
-                                                )
-                                                |> List.filterMap identity
-
-                                        bottomRight =
-                                            List.map2
-                                                (\x y ->
-                                                    if x == f.x && y == f.y then
-                                                        Just { x = x, y = y }
-
-                                                    else
-                                                        Nothing
-                                                )
-                                                (anyRange (currentField.x + 1) 8)
-                                                (anyRange (currentField.y + 1) 8)
-                                                |> List.filterMap identity
-
-                                        bottomLeft =
-                                            List.map2
-                                                (\x y ->
-                                                    if x == f.x && y == f.y then
-                                                        Just { x = x, y = y }
-
-                                                    else
-                                                        Nothing
-                                                )
-                                                (anyRange (currentField.x - 1) 1
-                                                    |> List.reverse
-                                                )
-                                                (anyRange (currentField.y + 1) 8)
-                                                |> List.filterMap identity
-                                    in
-                                    List.concat
-                                        [ topRight
-                                        , topLeft
-                                        , bottomRight
-                                        , bottomLeft
-                                        ]
-                                        |> List.length
-                                        |> (/=) 0
+                                Queen ->
+                                    isOccupiedFieldsDiagonaly currentField f.x f.y
+                                        || isOccupiedFieldsXY currentField f.x f.y
 
                                 _ ->
                                     False
@@ -410,21 +424,24 @@ getPossibleFieldsToMove fg currentField myTeam =
                             []
 
                     Rook ->
-                        getAllPossibleMovesForRook currentField opponentFieldLst
+                        getAllPossibleXYMoves currentField opponentFieldLst
 
                     Knight ->
                         getAllPossibleMovesForKnight currentField opponentFieldLst
 
                     Bishop ->
-                        getAllPossibleMovesForBishop currentField opponentFieldLst
+                        getAllPossibleDiagonalMoves currentField opponentFieldLst
+
+                    Queen ->
+                        getAllPossibleMovesForQueen currentField opponentFieldLst
 
                     _ ->
                         opponentFieldLst
            )
 
 
-getAllPossibleMovesForRook : Field -> List Field -> List Field
-getAllPossibleMovesForRook myPosition positionsOfMyOtherFigures =
+getAllPossibleXYMoves : Field -> List Field -> List Field
+getAllPossibleXYMoves myPosition positionsOfMyOtherFigures =
     let
         fromMeToTop : Field -> List Field -> List Field
         fromMeToTop currentField lst =
@@ -634,8 +651,8 @@ getAllPossibleMovesForKnight myPosition positionsOfMyOtherFigures =
         ]
 
 
-getAllPossibleMovesForBishop : Field -> List Field -> List Field
-getAllPossibleMovesForBishop myPosition positionsOfMyOtherFigures =
+getAllPossibleDiagonalMoves : Field -> List Field -> List Field
+getAllPossibleDiagonalMoves myPosition positionsOfMyOtherFigures =
     let
         fromMeToTopRight : Field -> List Field -> List Field
         fromMeToTopRight currentField lst =
@@ -739,6 +756,21 @@ getAllPossibleMovesForBishop myPosition positionsOfMyOtherFigures =
         , fromMeToTopLeft myPosition positionsOfMyOtherFigures
         , fromMeToBottomLeft myPosition positionsOfMyOtherFigures
         ]
+
+
+getAllPossibleMovesForQueen : Field -> List Field -> List Field
+getAllPossibleMovesForQueen myPosition positionsOfMyOtherFigures =
+    let
+        xyMoves : List Field
+        xyMoves =
+            getAllPossibleXYMoves myPosition positionsOfMyOtherFigures
+
+        diagonalMoves : List Field
+        diagonalMoves =
+            getAllPossibleDiagonalMoves myPosition positionsOfMyOtherFigures
+    in
+    List.concat
+        [ xyMoves, diagonalMoves ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
