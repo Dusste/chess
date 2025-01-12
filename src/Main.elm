@@ -103,7 +103,7 @@ startPositionPlayer2 =
     -- , { figure = Pawn, moves = [ { x = 5, y = 3 } ] }
     -- , { figure = Pawn, moves = [ { x = 1, y = 3 } ] }
     -- , { figure = Pawn, moves = [ { x = 5, y = 7 } ] }
-    , { figure = Pawn, moves = [ { x = 6, y = 7 } ] }
+    , { figure = Pawn, moves = [ { x = 7, y = 8 } ] }
     , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
     , { figure = Pawn, moves = [ { x = 8, y = 4 } ] }
     , { figure = Knight, moves = [ { x = 1, y = 4 } ] }
@@ -111,8 +111,7 @@ startPositionPlayer2 =
     , { figure = Knight, moves = [ { x = 8, y = 8 } ] }
     , { figure = Knight, moves = [ { x = 3, y = 6 } ] }
     , { figure = Bishop, moves = [ { x = 6, y = 7 } ] }
-
-    -- , { figure = King, moves = [ { x = 5, y = 8 } ] }
+    , { figure = King, moves = [ { x = 5, y = 6 } ] }
     , { figure = Queen, moves = [ { x = 5, y = 5 } ] }
     ]
 
@@ -406,8 +405,23 @@ getPossibleFieldsToMove fg currentField myTeam =
                                     isOccupiedFieldsDiagonaly currentField f.x f.y
                                         || isOccupiedFieldsXY currentField f.x f.y
 
-                                _ ->
-                                    False
+                                King ->
+                                    --top
+                                    (currentField.y - f.y == 1 && currentField.x == f.x)
+                                        || --bottom
+                                           (f.y - currentField.y == 1 && f.x == currentField.x)
+                                        -- left
+                                        || (currentField.x - f.x == 1 && currentField.y == f.y)
+                                        -- right
+                                        || (f.x - currentField.x == 1 && f.y == currentField.y)
+                                        -- top/right
+                                        || (currentField.x + 1 == f.x && currentField.y - 1 == f.y)
+                                        -- top/left
+                                        || (currentField.x - 1 == f.x && currentField.y - 1 == f.y)
+                                        -- bottom/right
+                                        || (currentField.x + 1 == f.x && currentField.y + 1 == f.y)
+                                        -- bottom/left
+                                        || (currentField.x - 1 == f.x && currentField.y + 1 == f.y)
                         )
                     |> Maybe.withDefault False
             )
@@ -434,8 +448,23 @@ getPossibleFieldsToMove fg currentField myTeam =
                     Queen ->
                         getAllPossibleMovesForQueen currentField opponentFieldLst
 
-                    _ ->
-                        opponentFieldLst
+                    King ->
+                        [ { x = currentField.x, y = currentField.y - 1 }
+                        , { x = currentField.x, y = currentField.y + 1 }
+                        , { x = currentField.x - 1, y = currentField.y }
+                        , { x = currentField.x + 1, y = currentField.y }
+                        , { x = currentField.x + 1, y = currentField.y + 1 }
+                        , { x = currentField.x - 1, y = currentField.y - 1 }
+                        , { x = currentField.x + 1, y = currentField.y - 1 }
+                        , { x = currentField.x - 1, y = currentField.y + 1 }
+                        ]
+                            |> List.filter
+                                (\pot ->
+                                    opponentFieldLst
+                                        |> List.Extra.find (\f -> f == pot)
+                                        |> Maybe.map (\_ -> False)
+                                        |> Maybe.withDefault True
+                                )
            )
 
 
