@@ -44,6 +44,12 @@ type Figure
     | Pawn
 
 
+type alias NextMoves =
+    { potentialMoves : List Field
+    , potentialCaptures : List Field
+    }
+
+
 startPositionPlayer1 : List FigureState
 startPositionPlayer1 =
     [ { figure = Rook, moves = [ { x = 1, y = 1 } ] }
@@ -55,12 +61,9 @@ startPositionPlayer1 =
     , { figure = Pawn, moves = [ { x = 5, y = 2 } ] }
     , { figure = Pawn, moves = [ { x = 6, y = 2 } ] }
     , { figure = Pawn, moves = [ { x = 7, y = 2 } ] }
-
-    -- , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
+    , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
     , { figure = Knight, moves = [ { x = 2, y = 1 } ] }
     , { figure = Knight, moves = [ { x = 7, y = 1 } ] }
-
-    -- , { figure = Knight, moves = [ { x = 2, y = 4 } ] }
     , { figure = Bishop, moves = [ { x = 3, y = 1 } ] }
     , { figure = Bishop, moves = [ { x = 6, y = 1 } ] }
     , { figure = King, moves = [ { x = 5, y = 1 } ] }
@@ -88,6 +91,7 @@ startPositionPlayer1 =
 --     , { figure = King, moves = [ { x = 5, y = 1 } ] }
 --     , { figure = Queen, moves = [ { x = 4, y = 1 } ] }
 --     ]
+-- {-
 
 
 startPositionPlayer2 : List FigureState
@@ -117,6 +121,7 @@ startPositionPlayer2 =
 
 
 
+-- -}
 -- startPositionPlayer2 : List FigureState
 -- startPositionPlayer2 =
 --     [ { figure = Rook, moves = [ { x = 1, y = 8 } ] }
@@ -208,7 +213,7 @@ isEqualPosition x x1 y y1 =
 type
     PossibleNextMove
     -- Next Move - Current Field and Next Move Potential fields
-    = NextMove Field (List Field)
+    = NextMove Field NextMoves
     | Idle
 
 
@@ -372,9 +377,14 @@ isOccupiedFieldsDiagonaly currentField xx yy =
         |> (/=) 0
 
 
-getPossibleFieldsToMove : Figure -> Field -> List FigureState -> List Field
-getPossibleFieldsToMove fg currentField myTeam =
-    myTeam
+getNextPossibleMoves : Figure -> Field -> List FigureState -> List FigureState -> NextMoves
+getNextPossibleMoves fg currentField opponent myTeam =
+    let
+        allFigures : List FigureState
+        allFigures =
+            List.concat [ opponent, myTeam ]
+    in
+    allFigures
         |> List.filter
             (\fs ->
                 fs.moves
@@ -431,22 +441,34 @@ getPossibleFieldsToMove fg currentField myTeam =
                 case fg of
                     Pawn ->
                         if List.isEmpty opponentFieldLst then
-                            [ { x = currentField.x, y = currentField.y - 1 } ]
+                            { potentialMoves = [ { x = currentField.x, y = currentField.y - 1 } ]
+                            , potentialCaptures = []
+                            }
 
                         else
-                            []
+                            { potentialMoves = []
+                            , potentialCaptures = []
+                            }
 
                     Rook ->
-                        getAllPossibleXYMoves currentField opponentFieldLst
+                        { potentialMoves = getAllPossibleXYMoves currentField opponentFieldLst
+                        , potentialCaptures = []
+                        }
 
                     Knight ->
-                        getAllPossibleMovesForKnight currentField opponentFieldLst
+                        { potentialMoves = getAllPossibleMovesForKnight currentField opponentFieldLst
+                        , potentialCaptures = []
+                        }
 
                     Bishop ->
-                        getAllPossibleDiagonalMoves currentField opponentFieldLst
+                        { potentialMoves = getAllPossibleDiagonalMoves currentField opponentFieldLst
+                        , potentialCaptures = []
+                        }
 
                     Queen ->
-                        getAllPossibleMovesForQueen currentField opponentFieldLst
+                        { potentialMoves = getAllPossibleMovesForQueen currentField opponentFieldLst
+                        , potentialCaptures = []
+                        }
 
                     King ->
                         [ { x = currentField.x, y = currentField.y - 1 }
@@ -465,6 +487,11 @@ getPossibleFieldsToMove fg currentField myTeam =
                                         |> Maybe.map (\_ -> False)
                                         |> Maybe.withDefault True
                                 )
+                            |> (\possibleMoves ->
+                                    { potentialMoves = possibleMoves
+                                    , potentialCaptures = []
+                                    }
+                               )
            )
 
 
@@ -821,25 +848,26 @@ update msg model =
 
                     else
                         let
-                            nextMoves : List Field
+                            nextMoves : NextMoves
                             nextMoves =
-                                getPossibleFieldsToMove
+                                getNextPossibleMoves
                                     figure
                                     (Field
                                         desiredOrCurrentPosition.x
                                         desiredOrCurrentPosition.y
                                     )
+                                    model.player1
                                     model.player2
 
                             cannotMove : Bool
                             cannotMove =
-                                nextMoves
+                                nextMoves.potentialMoves
                                     |> List.length
                                     |> (==) 0
                         in
                         -- It's IDLE -> Check if someone is blocking your move
                         if cannotMove then
-                            -- PAWN: Ilegal move -> Your other figure is preventing you to move
+                            -- Ilegal move -> Your other figure is preventing you to move
                             let
                                 _ =
                                     Debug.log "It seems that potential next step for this figure is to step over your other figure :( Not possible" ""
@@ -850,31 +878,26 @@ update msg model =
 
                         else
                             -- It's IDLE -> Choosing figure you want to move
-                            case model.possibleNextMoves of
-                                Idle ->
-                                    ( { model
-                                        | possibleNextMoves =
-                                            NextMove
-                                                { x = desiredOrCurrentPosition.x
-                                                , y = desiredOrCurrentPosition.y
-                                                }
-                                                nextMoves
-                                        , error = Nothing
-                                      }
-                                    , Cmd.none
-                                    )
-
-                                NextMove _ lstOfMoves ->
-                                    ( model, Cmd.none )
+                            ( { model
+                                | possibleNextMoves =
+                                    NextMove
+                                        { x = desiredOrCurrentPosition.x
+                                        , y = desiredOrCurrentPosition.y
+                                        }
+                                        nextMoves
+                                , error = Nothing
+                              }
+                            , Cmd.none
+                            )
 
                 Nothing ->
                     case model.possibleNextMoves of
-                        NextMove previousField lstOfMoves ->
+                        NextMove previousField nextMoves ->
                             -- Alright ! Maybe we can move figure, let's check if selected field is among allowed fields !
                             let
                                 isOkToMove : Bool
                                 isOkToMove =
-                                    lstOfMoves
+                                    nextMoves.potentialMoves
                                         |> List.any
                                             (\{ x, y } ->
                                                 isEqualPosition x desiredOrCurrentPosition.x y desiredOrCurrentPosition.y
@@ -959,11 +982,23 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
         figureEl =
             figureToHtml maybeFigure
 
-        isPossibleNextMove : Bool
-        isPossibleNextMove =
+        isPotenitalMove : Bool
+        isPotenitalMove =
             case possibleNextMoves of
-                NextMove _ lstOfMoves ->
-                    lstOfMoves
+                NextMove _ nextMoves ->
+                    nextMoves.potentialMoves
+                        |> List.filter (\{ x, y } -> isEqualPosition xIndex x yIndex y)
+                        |> List.length
+                        |> (/=) 0
+
+                Idle ->
+                    False
+
+        isPotenitalCapture : Bool
+        isPotenitalCapture =
+            case possibleNextMoves of
+                NextMove _ nextMoves ->
+                    nextMoves.potentialCaptures
                         |> List.filter (\{ x, y } -> isEqualPosition xIndex x yIndex y)
                         |> List.length
                         |> (/=) 0
@@ -979,8 +1014,11 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
         [ HE.onClick <| InitiateMove position
         , HA.class <|
             "relative cursor-pointer flex w-[100px] h-[100px]"
-                ++ (if isPossibleNextMove then
+                ++ (if isPotenitalMove then
                         " bg-green-100 text-black"
+
+                    else if isPotenitalCapture then
+                        " border-2 border-sky-400"
 
                     else
                         ""
