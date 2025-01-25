@@ -116,7 +116,7 @@ startPositionPlayer2 =
     -- , { figure = Pawn, moves = [ { x = 1, y = 3 } ] }
     -- , { figure = Pawn, moves = [ { x = 5, y = 7 } ] }
     , ( Me, { figure = Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Me, { figure = Pawn, moves = [ { x = 8, y = 4 } ] } )
+    , ( Me, { figure = Pawn, moves = [ { x = 7, y = 4 } ] } )
     , ( Me, { figure = Knight, moves = [ { x = 1, y = 4 } ] } )
     , ( Me, { figure = Bishop, moves = [ { x = 3, y = 4 } ] } )
     , ( Me, { figure = Knight, moves = [ { x = 8, y = 8 } ] } )
@@ -408,11 +408,17 @@ getNextPossibleMoves fg currentField opponent myTeam =
                     |> List.head
                     |> Maybe.map
                         (\f ->
-                            -- mapping over opponent standing on potential next fields
+                            -- mapping over all figures standing on potential next fields
                             case fg of
                                 Pawn ->
-                                    currentField.y - f.y == 1 && currentField.x == f.x
+                                    --top
+                                    (currentField.y - f.y == 1 && currentField.x == f.x)
+                                        -- top/right
+                                        || (currentField.x + 1 == f.x && currentField.y - 1 == f.y)
+                                        -- top/left
+                                        || (currentField.x - 1 == f.x && currentField.y - 1 == f.y)
 
+                                -- || (pt == Opponent && currentField.y - f.y == 1 && (currentField.x - 1 == f.x && currentField.x + 1 == f.x))
                                 Rook ->
                                     isOccupiedFieldsXY currentField f.x f.y
 
@@ -478,15 +484,7 @@ getNextPossibleMoves fg currentField opponent myTeam =
                 in
                 case fg of
                     Pawn ->
-                        if List.isEmpty (List.concat [ opponentsLst, myFiguresLst ]) then
-                            { potentialMoves = [ { x = currentField.x, y = currentField.y - 1 } ]
-                            , potentialCaptures = opponentsLst
-                            }
-
-                        else
-                            { potentialMoves = []
-                            , potentialCaptures = []
-                            }
+                        getAllPossibleMovesPawn currentField figuresLst
 
                     Rook ->
                         getAllPossibleXYMoves currentField figuresLst
@@ -503,28 +501,77 @@ getNextPossibleMoves fg currentField opponent myTeam =
                         getAllPossibleMovesForQueen currentField figuresLst
 
                     King ->
-                        [ { x = currentField.x, y = currentField.y - 1 }
-                        , { x = currentField.x, y = currentField.y + 1 }
-                        , { x = currentField.x - 1, y = currentField.y }
-                        , { x = currentField.x + 1, y = currentField.y }
-                        , { x = currentField.x + 1, y = currentField.y + 1 }
-                        , { x = currentField.x - 1, y = currentField.y - 1 }
-                        , { x = currentField.x + 1, y = currentField.y - 1 }
-                        , { x = currentField.x - 1, y = currentField.y + 1 }
-                        ]
-                            |> List.filter
-                                (\field ->
-                                    List.concat [ opponentsLst, myFiguresLst ]
-                                        |> List.Extra.find (\f -> f == field)
-                                        |> Maybe.map (\_ -> False)
-                                        |> Maybe.withDefault True
-                                )
-                            |> (\possibleMoves ->
-                                    { potentialMoves = possibleMoves
-                                    , potentialCaptures = opponentsLst
-                                    }
-                               )
+                        getAllPossibleMovesKing currentField opponentsLst myFiguresLst
            )
+
+
+getAllPossibleMovesKing : Field -> List Field -> List Field -> NextMoves
+getAllPossibleMovesKing myPosition opponentsLst myFiguresLst =
+    [ { x = myPosition.x, y = myPosition.y - 1 }
+    , { x = myPosition.x, y = myPosition.y + 1 }
+    , { x = myPosition.x - 1, y = myPosition.y }
+    , { x = myPosition.x + 1, y = myPosition.y }
+    , { x = myPosition.x + 1, y = myPosition.y + 1 }
+    , { x = myPosition.x - 1, y = myPosition.y - 1 }
+    , { x = myPosition.x + 1, y = myPosition.y - 1 }
+    , { x = myPosition.x - 1, y = myPosition.y + 1 }
+    ]
+        |> List.filter
+            (\field ->
+                List.concat [ opponentsLst, myFiguresLst ]
+                    |> List.Extra.find (\f -> f == field)
+                    |> Maybe.map (\_ -> False)
+                    |> Maybe.withDefault True
+            )
+        |> (\possibleMoves ->
+                { potentialMoves = possibleMoves
+                , potentialCaptures = opponentsLst
+                }
+           )
+
+
+getAllPossibleMovesPawn : Field -> List ( PlayerType, Field ) -> NextMoves
+getAllPossibleMovesPawn myPosition figuresLst =
+    let
+        inFrontOfMe : Field
+        inFrontOfMe =
+            { x = myPosition.x, y = myPosition.y - 1 }
+
+        transformFigures : List ( Maybe PlayerType, Field )
+        transformFigures =
+            -- Transform figures so player type can be maybe
+            -- giving opportunity to include potential move forward as playerType Nothing
+            figuresLst |> List.map (\( ft, f ) -> ( Just ft, f ))
+    in
+    figuresLst
+        |> List.Extra.find
+            (\( _, f ) ->
+                isEqualPosition f.x myPosition.x f.y (myPosition.y - 1)
+            )
+        |> Maybe.map
+            (\( _, f_ ) ->
+                transformFigures
+                    |> List.filter
+                        (\( _, f1 ) ->
+                            not <| isEqualPosition f_.x f1.x f_.y f1.y
+                        )
+            )
+        |> Maybe.withDefault (( Nothing, inFrontOfMe ) :: transformFigures)
+        |> List.foldl
+            (\( maybePt, f ) sum ->
+                maybePt
+                    |> Maybe.map
+                        (\pt ->
+                            case pt of
+                                Opponent ->
+                                    { sum | potentialCaptures = f :: sum.potentialCaptures }
+
+                                Me ->
+                                    sum
+                        )
+                    |> Maybe.withDefault { sum | potentialMoves = [ f ] }
+            )
+            (NextMoves [] [])
 
 
 getAllPossibleXYMoves : Field -> List ( PlayerType, Field ) -> NextMoves
@@ -1139,12 +1186,13 @@ update msg model =
 
                             cannotMove : Bool
                             cannotMove =
+                                -- TODO if I cannot move it doesn't mean I cannot capture !
                                 nextMoves.potentialMoves
                                     |> List.length
                                     |> (==) 0
                         in
                         -- It's IDLE -> Check if someone is blocking your move
-                        if cannotMove then
+                        if False then
                             -- Ilegal move -> Your other figure is preventing you to move
                             let
                                 _ =
