@@ -1,11 +1,11 @@
 module Main exposing (main)
 
+import BackwardCompatibility
 import Browser
 import Browser.Navigation as Nav
 import Chess
 import Html exposing (Html)
 import Html.Attributes as HA
-import Tests
 import Url exposing (Url)
 import Url.Parser exposing ((</>))
 
@@ -14,7 +14,7 @@ matchRoute : Url.Parser.Parser (Route -> a) a
 matchRoute =
     Url.Parser.oneOf
         [ Url.Parser.map Chess Url.Parser.top
-        , Url.Parser.map Tests (Url.Parser.s "tests")
+        , Url.Parser.map BackwardCompatibility (Url.Parser.s "tests")
         ]
 
 
@@ -24,8 +24,8 @@ urlToPage url key =
         Just Chess ->
             ChessPage (Tuple.first Chess.init)
 
-        Just Tests ->
-            TestPage (Tuple.first Tests.init)
+        Just BackwardCompatibility ->
+            BackwardCompatibilityPage (Tuple.first BackwardCompatibility.init)
 
         _ ->
             NotFoundPage
@@ -38,22 +38,18 @@ initCurrentPage model =
             let
                 ( model_, cmds ) =
                     Chess.init
-
-                -- Because Main doesn’t know anything about the page specific messages, it needs to map them to one of the data constructors from its own Msg type using the Cmd.map function
             in
             ( { model | page = ChessPage model_ }
             , Cmd.map GotChessPageMsg cmds
             )
 
-        TestPage _ ->
+        BackwardCompatibilityPage _ ->
             let
                 ( model_, cmds ) =
-                    Tests.init
-
-                -- Because Main doesn’t know anything about the page specific messages, it needs to map them to one of the data constructors from its own Msg type using the Cmd.map function
+                    BackwardCompatibility.init
             in
-            ( { model | page = TestPage model_ }
-            , Cmd.map GotTestPageMsg cmds
+            ( { model | page = BackwardCompatibilityPage model_ }
+            , Cmd.map GotBackwardCompatibilityPageMsg cmds
             )
 
         NotFoundPage ->
@@ -87,19 +83,19 @@ initialModel url key =
 type Msg
     = ClickedLink Browser.UrlRequest
     | ChangedUrl Url
-    | GotTestPageMsg Tests.Msg
+    | GotBackwardCompatibilityPageMsg BackwardCompatibility.Msg
     | GotChessPageMsg Chess.Msg
 
 
 type Page
     = ChessPage Chess.Model
-    | TestPage Tests.Model
+    | BackwardCompatibilityPage BackwardCompatibility.Model
     | NotFoundPage
 
 
 type Route
     = Chess
-    | Tests
+    | BackwardCompatibility
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -119,25 +115,25 @@ update msg model =
             case model.page of
                 ChessPage mainModel ->
                     let
-                        ( loginModelFromLogin, loginMsgFromLogin ) =
+                        ( model_, cmds_ ) =
                             Chess.update msg_ mainModel
                     in
-                    ( { model | page = ChessPage loginModelFromLogin }
-                    , Cmd.map GotChessPageMsg loginMsgFromLogin
+                    ( { model | page = ChessPage model_ }
+                    , Cmd.map GotChessPageMsg cmds_
                     )
 
                 _ ->
                     ( model, Cmd.none )
 
-        GotTestPageMsg msg_ ->
+        GotBackwardCompatibilityPageMsg msg_ ->
             case model.page of
-                TestPage mainModel ->
+                BackwardCompatibilityPage mainModel ->
                     let
-                        ( loginModelFromLogin, loginMsgFromLogin ) =
-                            Tests.update msg_ mainModel
+                        ( model_, cmds_ ) =
+                            BackwardCompatibility.update msg_ mainModel
                     in
-                    ( { model | page = TestPage loginModelFromLogin }
-                    , Cmd.map GotTestPageMsg loginMsgFromLogin
+                    ( { model | page = BackwardCompatibilityPage model_ }
+                    , Cmd.map GotBackwardCompatibilityPageMsg cmds_
                     )
 
                 _ ->
@@ -167,9 +163,9 @@ content model =
             Chess.view loginModel
                 |> Html.map GotChessPageMsg
 
-        TestPage signupModel ->
-            Tests.view signupModel
-                |> Html.map GotTestPageMsg
+        BackwardCompatibilityPage model_ ->
+            BackwardCompatibility.view model_
+                |> Html.map GotBackwardCompatibilityPageMsg
 
         NotFoundPage ->
             Html.div

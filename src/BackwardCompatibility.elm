@@ -1,4 +1,4 @@
-module Tests exposing (Model, Msg, init, update, view)
+module BackwardCompatibility exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html)
 
