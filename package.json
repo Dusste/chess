@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"npx tailwindcss -i tailwind.css -o public/tailwind.build.css --watch\" \"wait-on public/tailwind.build.css && elm-live src/Main.elm --hot --open --port=1234 -- --debug  --output=public/elm.js\""
+    "start": "concurrently \"npx tailwindcss -i tailwind.css -o public/tailwind.build.css --watch\" \"wait-on public/tailwind.build.css && elm-live src/Main.elm --hot --pushstate --open --port=1234 -- --debug --output=public/elm.js\""
   },
   "author": "",
   "license": "ISC",
