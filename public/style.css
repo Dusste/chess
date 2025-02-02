@@ -5,3 +5,18 @@ body {
   background-color: #000000;
   color: #ffffff;
 }
+
+code {
+  font-family: 'Fira Code', 'Courier New', monospace;
+  display: block;
+  background-color: #1e1e1e;
+  color: #dcdcdc;
+  font-size: 12px !important;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a2a;
+}

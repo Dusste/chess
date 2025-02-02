@@ -1,4 +1,4 @@
-module Chess exposing (Model, Msg, init, update, view)
+module Chess exposing (..)
 
 -- (Field, Figure(..), FigureState, NextMoves, PlayerType(..), getNextPossibleMoves)
 
@@ -917,7 +917,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 base =
                     { potentialMove = Nothing, potentialCapture = Nothing }
             in
-            if nextField.y >= 1 || nextField.x <= 8 then
+            if nextField.y <= 8 && nextField.y >= 1 && nextField.x <= 8 && nextField.x >= 1 then
                 case
                     lst
                         |> List.Extra.find
@@ -950,7 +950,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 base =
                     { potentialMove = Nothing, potentialCapture = Nothing }
             in
-            if nextField.y <= 8 then
+            if nextField.y <= 8 && nextField.y >= 1 && nextField.x <= 8 && nextField.x >= 1 then
                 case
                     lst
                         |> List.Extra.find
@@ -983,7 +983,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 base =
                     { potentialMove = Nothing, potentialCapture = Nothing }
             in
-            if nextField.y >= 1 then
+            if nextField.y <= 8 && nextField.y >= 1 && nextField.x <= 8 && nextField.x >= 1 then
                 case
                     lst
                         |> List.Extra.find
@@ -1016,7 +1016,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 base =
                     { potentialMove = Nothing, potentialCapture = Nothing }
             in
-            if nextField.y <= 8 then
+            if nextField.y <= 8 && nextField.y >= 1 && nextField.x <= 8 && nextField.x >= 1 then
                 case
                     lst
                         |> List.Extra.find
@@ -1181,13 +1181,13 @@ update msg model =
                                     model.player1
                                     model.player2
 
-                            _ =
-                                Debug.log "Queen" nextMoves
-
                             cannotMoveOrCapture : Bool
                             cannotMoveOrCapture =
                                 -- TODO if I cannot move it doesn't mean I cannot capture !
-                                List.concat [ nextMoves.potentialMoves, nextMoves.potentialCaptures ]
+                                List.concat
+                                    [ nextMoves.potentialMoves
+                                    , nextMoves.potentialCaptures
+                                    ]
                                     |> List.length
                                     |> (==) 0
                         in
@@ -1436,17 +1436,3 @@ view model =
         , Html.div [ HA.class "flex justify-center" ]
             [ viewColumns model ]
         ]
-
-
-
--- MAIN
--- main : Program () Model Msg
--- main =
---     Browser.application
---         { init = init
---         , update = update
---         , view = view
---         , subscriptions = subscriptions
---         , onUrlRequest = ClickedLink
---         , onUrlChange = ChangedUrl
---         }

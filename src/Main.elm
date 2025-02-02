@@ -14,18 +14,47 @@ matchRoute : Url.Parser.Parser (Route -> a) a
 matchRoute =
     Url.Parser.oneOf
         [ Url.Parser.map Chess Url.Parser.top
-        , Url.Parser.map BackwardCompatibility (Url.Parser.s "tests")
+        , Url.Parser.map (BackwardCompatibility Nothing) (Url.Parser.s "tests")
+        , Url.Parser.map BackwardCompatibility (Url.Parser.s "tests" </> paramStringToFigure)
         ]
 
 
-urlToPage : Url -> Nav.Key -> Page
-urlToPage url key =
+paramStringToFigure : Url.Parser.Parser (Maybe Chess.Figure -> a) a
+paramStringToFigure =
+    Url.Parser.custom "FIGURE"
+        (\figure ->
+            case figure of
+                "queen" ->
+                    Just (Just Chess.Queen)
+
+                "king" ->
+                    Just (Just Chess.King)
+
+                "rook" ->
+                    Just (Just Chess.Rook)
+
+                "knight" ->
+                    Just (Just Chess.Knight)
+
+                "bishop" ->
+                    Just (Just Chess.Bishop)
+
+                "pawn" ->
+                    Just (Just Chess.Pawn)
+
+                _ ->
+                    Just Nothing
+        )
+
+
+urlToPage : Url -> Page
+urlToPage url =
     case Url.Parser.parse matchRoute url of
         Just Chess ->
             ChessPage (Tuple.first Chess.init)
 
-        Just BackwardCompatibility ->
-            BackwardCompatibilityPage (Tuple.first BackwardCompatibility.init)
+        Just (BackwardCompatibility maybeFigure) ->
+            BackwardCompatibilityPage (Tuple.first (BackwardCompatibility.init maybeFigure))
 
         _ ->
             NotFoundPage
@@ -43,10 +72,10 @@ initCurrentPage model =
             , Cmd.map GotChessPageMsg cmds
             )
 
-        BackwardCompatibilityPage _ ->
+        BackwardCompatibilityPage m ->
             let
                 ( model_, cmds ) =
-                    BackwardCompatibility.init
+                    BackwardCompatibility.init m.figure
             in
             ( { model | page = BackwardCompatibilityPage model_ }
             , Cmd.map GotBackwardCompatibilityPageMsg cmds
@@ -72,7 +101,7 @@ initialModel : Url.Url -> Nav.Key -> Model
 initialModel url key =
     { url = url
     , key = key
-    , page = urlToPage url key
+    , page = urlToPage url
     }
 
 
@@ -95,7 +124,7 @@ type Page
 
 type Route
     = Chess
-    | BackwardCompatibility
+    | BackwardCompatibility (Maybe Chess.Figure)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -143,7 +172,7 @@ update msg model =
             let
                 newPage : Page
                 newPage =
-                    urlToPage url model.key
+                    urlToPage url
             in
             initCurrentPage { model | page = newPage }
 
