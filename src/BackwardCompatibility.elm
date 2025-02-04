@@ -128,7 +128,7 @@ view model =
                     let
                         queenTestUnitLst =
                             [ { startPosition = { x = 5, y = 5 }
-                              , maybeSpot = fieldToSpot { x = 5, y = 5 }
+                              , maybeSpot = Chess.fieldToSpot { x = 5, y = 5 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Queen
@@ -140,7 +140,7 @@ view model =
                               , myPossitions = Helper.queenPossitionsTest1
                               }
                             , { startPosition = { x = 2, y = 8 }
-                              , maybeSpot = fieldToSpot { x = 2, y = 8 }
+                              , maybeSpot = Chess.fieldToSpot { x = 2, y = 8 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Queen
@@ -152,7 +152,7 @@ view model =
                               , myPossitions = Helper.queenPossitionsTest2
                               }
                             , { startPosition = { x = 7, y = 3 }
-                              , maybeSpot = fieldToSpot { x = 7, y = 3 }
+                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 3 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Queen
@@ -179,7 +179,7 @@ view model =
                     let
                         kingTestUnitLst =
                             [ { startPosition = { x = 5, y = 6 }
-                              , maybeSpot = fieldToSpot { x = 5, y = 6 }
+                              , maybeSpot = Chess.fieldToSpot { x = 5, y = 6 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.King
@@ -191,7 +191,7 @@ view model =
                               , myPossitions = Helper.kingPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 3 }
-                              , maybeSpot = fieldToSpot { x = 6, y = 3 }
+                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 3 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.King
@@ -203,7 +203,7 @@ view model =
                               , myPossitions = Helper.kingPossitionsTest2
                               }
                             , { startPosition = { x = 1, y = 3 }
-                              , maybeSpot = fieldToSpot { x = 1, y = 3 }
+                              , maybeSpot = Chess.fieldToSpot { x = 1, y = 3 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.King
@@ -230,7 +230,7 @@ view model =
                     let
                         rookTestUnitLst =
                             [ { startPosition = { x = 4, y = 7 }
-                              , maybeSpot = fieldToSpot { x = 4, y = 7 }
+                              , maybeSpot = Chess.fieldToSpot { x = 4, y = 7 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Rook
@@ -242,7 +242,7 @@ view model =
                               , myPossitions = Helper.rookPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 4 }
-                              , maybeSpot = fieldToSpot { x = 6, y = 4 }
+                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 4 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Rook
@@ -254,7 +254,7 @@ view model =
                               , myPossitions = Helper.rookPossitionsTest2
                               }
                             , { startPosition = { x = 1, y = 8 }
-                              , maybeSpot = fieldToSpot { x = 1, y = 8 }
+                              , maybeSpot = Chess.fieldToSpot { x = 1, y = 8 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Rook
@@ -281,7 +281,7 @@ view model =
                     let
                         knightTestUnitLst =
                             [ { startPosition = { x = 6, y = 7 }
-                              , maybeSpot = fieldToSpot { x = 6, y = 7 }
+                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 7 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Knight
@@ -293,7 +293,7 @@ view model =
                               , myPossitions = Helper.knightPossitionsTest1
                               }
                             , { startPosition = { x = 5, y = 4 }
-                              , maybeSpot = fieldToSpot { x = 5, y = 4 }
+                              , maybeSpot = Chess.fieldToSpot { x = 5, y = 4 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Knight
@@ -305,7 +305,7 @@ view model =
                               , myPossitions = Helper.knightPossitionsTest2
                               }
                             , { startPosition = { x = 3, y = 3 }
-                              , maybeSpot = fieldToSpot { x = 3, y = 3 }
+                              , maybeSpot = Chess.fieldToSpot { x = 3, y = 3 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Knight
@@ -332,7 +332,7 @@ view model =
                     let
                         bishopTestUnitLst =
                             [ { startPosition = { x = 4, y = 5 }
-                              , maybeSpot = fieldToSpot { x = 4, y = 5 }
+                              , maybeSpot = Chess.fieldToSpot { x = 4, y = 5 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Bishop
@@ -344,7 +344,7 @@ view model =
                               , myPossitions = Helper.bishopPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 3 }
-                              , maybeSpot = fieldToSpot { x = 6, y = 3 }
+                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 3 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Bishop
@@ -356,7 +356,7 @@ view model =
                               , myPossitions = Helper.bishopPossitionsTest2
                               }
                             , { startPosition = { x = 2, y = 3 }
-                              , maybeSpot = fieldToSpot { x = 2, y = 3 }
+                              , maybeSpot = Chess.fieldToSpot { x = 2, y = 3 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Bishop
@@ -383,7 +383,7 @@ view model =
                     let
                         pawnTestUnitLst =
                             [ { startPosition = { x = 7, y = 4 }
-                              , maybeSpot = fieldToSpot { x = 7, y = 4 }
+                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 4 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Pawn
@@ -395,7 +395,7 @@ view model =
                               , myPossitions = Helper.pawnPossitionsTest1
                               }
                             , { startPosition = { x = 7, y = 3 }
-                              , maybeSpot = fieldToSpot { x = 7, y = 3 }
+                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 3 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Pawn
@@ -407,7 +407,7 @@ view model =
                               , myPossitions = Helper.pawnPossitionsTest2
                               }
                             , { startPosition = { x = 7, y = 2 }
-                              , maybeSpot = fieldToSpot { x = 7, y = 2 }
+                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 2 }
                               , actual =
                                     Chess.getNextPossibleMoves
                                         Chess.Pawn
@@ -558,26 +558,6 @@ toDiffHtml diffField =
                     [ Html.text "-" ]
                 , Html.text <| encodeFieldRecord f ++ ","
                 ]
-
-
-fieldToSpot : Chess.Field -> Maybe String
-fieldToSpot { x, y } =
-    let
-        rowList : List Int
-        rowList =
-            List.range 1 8
-
-        spotLst : Dict ( Int, Int ) String
-        spotLst =
-            rowList
-                |> List.concatMap
-                    (\col ->
-                        List.map (\row -> ( ( row, col ), Chess.indexToLetter row ++ String.fromInt col )) rowList
-                    )
-                |> Dict.fromList
-    in
-    spotLst
-        |> Dict.get ( x, y )
 
 
 encodeFieldRecord : Chess.Field -> String

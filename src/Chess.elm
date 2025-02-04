@@ -1,7 +1,6 @@
 module Chess exposing (..)
 
--- (Field, Figure(..), FigureState, NextMoves, PlayerType(..), getNextPossibleMoves)
-
+import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -26,10 +25,14 @@ type PlayerType
 
 type alias FigureState =
     ( PlayerType
-    , { figure : Figure
-      , moves : List Field
-      }
+    , FigureMoves
     )
+
+
+type alias FigureMoves =
+    { figure : Figure
+    , moves : List Field
+    }
 
 
 type alias Field =
@@ -213,6 +216,26 @@ indexToLetter idx =
             "H"
 
 
+fieldToSpot : Field -> Maybe String
+fieldToSpot { x, y } =
+    let
+        rowList : List Int
+        rowList =
+            List.range 1 8
+
+        spotLst : Dict ( Int, Int ) String
+        spotLst =
+            rowList
+                |> List.concatMap
+                    (\col ->
+                        List.map (\row -> ( ( row, col ), indexToLetter row ++ String.fromInt col )) rowList
+                    )
+                |> Dict.fromList
+    in
+    spotLst
+        |> Dict.get ( x, y )
+
+
 isEqualPosition : Int -> Int -> Int -> Int -> Bool
 isEqualPosition x x1 y y1 =
     x == x1 && y == y1
@@ -230,6 +253,8 @@ type alias Model =
     , player2 : List FigureState
     , possibleNextMoves : PossibleNextMove
     , error : Maybe String
+    , player1Captures : List FigureMoves
+    , player2Captures : List FigureMoves
     }
 
 
@@ -244,6 +269,8 @@ initialModel =
     , player2 = startPositionPlayer2
     , possibleNextMoves = Idle
     , error = Nothing
+    , player1Captures = []
+    , player2Captures = []
     }
 
 
@@ -261,6 +288,11 @@ type alias Position =
 type Msg
     = NoOp
     | InitiateMove Position
+    | InitiateCapture
+        { figure : Figure
+        , x : Int
+        , y : Int
+        }
 
 
 
@@ -1276,6 +1308,82 @@ update msg model =
                             , Cmd.none
                             )
 
+        InitiateCapture positionToCapture ->
+            case model.possibleNextMoves of
+                NextMove attackerCurrentField { potentialCaptures } ->
+                    let
+                        capturePosition : Maybe FigureState
+                        capturePosition =
+                            List.Extra.find
+                                (\( pt, { figure, moves } ) ->
+                                    moves
+                                        |> List.head
+                                        |> Maybe.map
+                                            (\f ->
+                                                isEqualPosition f.x positionToCapture.x f.y positionToCapture.y
+                                            )
+                                        |> Maybe.withDefault False
+                                )
+                                model.player1
+
+                        updatedPlayer1 : List FigureState
+                        updatedPlayer1 =
+                            model.player1
+                                |> List.filter
+                                    (\( pt, { figure, moves } ) ->
+                                        moves
+                                            |> List.head
+                                            |> Maybe.map
+                                                (\field ->
+                                                    not <| isEqualPosition field.x positionToCapture.x field.y positionToCapture.y
+                                                )
+                                            |> Maybe.withDefault False
+                                    )
+
+                        updatedPlayer2 : List FigureState
+                        updatedPlayer2 =
+                            model.player2
+                                |> List.map
+                                    (\( pt, { figure, moves } ) ->
+                                        case List.head moves of
+                                            Just currentPositon ->
+                                                if isEqualPosition currentPositon.x attackerCurrentField.x currentPositon.y attackerCurrentField.y then
+                                                    ( pt
+                                                    , { figure = figure
+                                                      , moves = { x = positionToCapture.x, y = positionToCapture.y } :: moves
+                                                      }
+                                                    )
+
+                                                else
+                                                    ( pt, { figure = figure, moves = moves } )
+
+                                            Nothing ->
+                                                ( pt, { figure = figure, moves = moves } )
+                                    )
+                    in
+                    ( { model
+                        | possibleNextMoves = Idle
+                        , player1 = updatedPlayer1
+                        , player2 = updatedPlayer2
+                        , player2Captures =
+                            case capturePosition of
+                                Just captureFigureState ->
+                                    (captureFigureState |> Tuple.second) :: model.player2Captures
+
+                                Nothing ->
+                                    model.player2Captures
+                      }
+                    , Cmd.none
+                    )
+
+                Idle ->
+                    ( { model | error = Just "You need to choose figure first" }, Cmd.none )
+
+
+
+-- in
+-- ( model, Cmd.none )
+
 
 findFigureOnThatField : Int -> Int -> List FigureState -> Maybe FigureState
 findFigureOnThatField x1 y1 lst =
@@ -1354,7 +1462,12 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
                 InitiateMove position
 
             else
-                NoOp
+                case maybeFigure of
+                    Just fg ->
+                        InitiateCapture { figure = fg, x = position.x, y = position.y }
+
+                    Nothing ->
+                        NoOp
         , HA.class <|
             "relative cursor-pointer flex w-[100px] h-[100px]"
                 ++ (if isPotenitalMove then
@@ -1435,4 +1548,29 @@ view model =
                 Html.text ""
         , Html.div [ HA.class "flex justify-center" ]
             [ viewColumns model ]
+        , Html.div
+            []
+            [ Html.ul
+                []
+                (model.player2Captures
+                    |> List.map
+                        (\{ figure, moves } ->
+                            -- TODO make player2Captures to have only figure and field that figure had when it was capture
+                            Html.li
+                                []
+                                [ figureToHtml (Just figure)
+                                , Html.p []
+                                    [ moves
+                                        |> List.head
+                                        |> Maybe.andThen
+                                            (\lastHeldField ->
+                                                fieldToSpot lastHeldField
+                                            )
+                                        |> Maybe.withDefault ""
+                                        |> Html.text
+                                    ]
+                                ]
+                        )
+                )
+            ]
         ]
