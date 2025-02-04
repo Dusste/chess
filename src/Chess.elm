@@ -1294,8 +1294,7 @@ update msg model =
                                     else
                                         -- Bummer, selected figure can't move to that field!
                                         { model
-                                            | player2 = model.player2
-                                            , error = Just "Selected figure can't move to that field"
+                                            | error = Just "Selected figure can't move to that field"
                                         }
                             in
                             ( updatedModel
@@ -1548,29 +1547,34 @@ view model =
                 Html.text ""
         , Html.div [ HA.class "flex justify-center" ]
             [ viewColumns model ]
-        , Html.div
+        , capturesView model
+        ]
+
+
+capturesView : Model -> Html Msg
+capturesView model =
+    Html.div
+        []
+        [ Html.ul
             []
-            [ Html.ul
-                []
-                (model.player2Captures
-                    |> List.map
-                        (\{ figure, moves } ->
-                            -- TODO make player2Captures to have only figure and field that figure had when it was capture
-                            Html.li
-                                []
-                                [ figureToHtml (Just figure)
-                                , Html.p []
-                                    [ moves
-                                        |> List.head
-                                        |> Maybe.andThen
-                                            (\lastHeldField ->
-                                                fieldToSpot lastHeldField
-                                            )
-                                        |> Maybe.withDefault ""
-                                        |> Html.text
-                                    ]
-                                ]
-                        )
+            (List.map
+                (\{ figure, moves } ->
+                    -- TODO make player2Captures to have only figure and field that figure had when it was capture
+                    Html.li
+                        []
+                        [ figureToHtml (Just figure)
+                        , Html.p []
+                            [ moves
+                                |> List.head
+                                |> Maybe.andThen
+                                    (\lastHeldField ->
+                                        fieldToSpot lastHeldField
+                                    )
+                                |> Maybe.withDefault ""
+                                |> Html.text
+                            ]
+                        ]
                 )
-            ]
+                model.player2Captures
+            )
         ]

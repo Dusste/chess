@@ -9,6 +9,7 @@ import Diff
 import Helper.Test as Helper
 import Html exposing (Html)
 import Html.Attributes as HA
+import Html.Extra
 import Json.Encode
 import Svg
 import Svg.Attributes as SVGHA
@@ -499,34 +500,38 @@ getTestResults actual_ expected_ =
                     [ HA.class "flex gap-6" ]
                     [ Html.div
                         [ HA.class "flex gap-6" ]
-                        [ Html.div
-                            []
-                            [ Html.p
+                        [ Html.Extra.viewIf (not <| List.isEmpty potentialMovesDiff)
+                            (Html.div
                                 []
-                                [ Html.text "Potential moves:" ]
-                            , Html.code
-                                []
-                                [ Html.ul
+                                [ Html.p
                                     []
-                                    (potentialMovesDiff
-                                        |> List.map toDiffHtml
-                                    )
-                                ]
-                            ]
-                        , Html.div
-                            []
-                            [ Html.p
-                                []
-                                [ Html.text "Potential captures:" ]
-                            , Html.code
-                                []
-                                [ Html.ul
+                                    [ Html.text "Potential moves:" ]
+                                , Html.code
                                     []
-                                    (potentialCapturesDiff
-                                        |> List.map toDiffHtml
-                                    )
+                                    [ Html.ul
+                                        []
+                                        (potentialMovesDiff
+                                            |> List.map toDiffHtml
+                                        )
+                                    ]
                                 ]
-                            ]
+                            )
+                        , Html.Extra.viewIf (not <| List.isEmpty potentialCapturesDiff)
+                            (Html.div
+                                []
+                                [ Html.p
+                                    []
+                                    [ Html.text "Potential captures:" ]
+                                , Html.code
+                                    []
+                                    [ Html.ul
+                                        []
+                                        (potentialCapturesDiff
+                                            |> List.map toDiffHtml
+                                        )
+                                    ]
+                                ]
+                            )
                         ]
                     ]
                 ]
