@@ -1,5 +1,7 @@
 module Main exposing (main)
 
+-- NOTE used until it was Browser.application app, keep it for now
+
 import BackwardCompatibility
 import Browser
 import Browser.Navigation as Nav

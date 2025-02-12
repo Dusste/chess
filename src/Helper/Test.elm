@@ -1,26 +1,26 @@
 module Helper.Test exposing (..)
 
-import Chess
+import Types
 
 
-opponentPositions : List Chess.FigureState
+opponentPositions : List Types.FigureState
 opponentPositions =
-    [ ( Chess.Opponent, { figure = Chess.Rook, moves = [ { x = 1, y = 1 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Rook, moves = [ { x = 8, y = 1 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 1, y = 2 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 2, y = 2 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 3, y = 2 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 4, y = 2 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 5, y = 2 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 6, y = 2 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 7, y = 7 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Pawn, moves = [ { x = 8, y = 2 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Knight, moves = [ { x = 2, y = 1 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Knight, moves = [ { x = 7, y = 1 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Bishop, moves = [ { x = 3, y = 1 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Bishop, moves = [ { x = 6, y = 1 } ] } )
-    , ( Chess.Opponent, { figure = Chess.King, moves = [ { x = 5, y = 1 } ] } )
-    , ( Chess.Opponent, { figure = Chess.Queen, moves = [ { x = 4, y = 1 } ] } )
+    [ ( Types.Opponent, { figure = Types.Rook, moves = [ { x = 1, y = 1 } ] } )
+    , ( Types.Opponent, { figure = Types.Rook, moves = [ { x = 8, y = 1 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 1, y = 2 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 2, y = 2 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 3, y = 2 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 4, y = 2 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 5, y = 2 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 6, y = 2 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 7, y = 7 } ] } )
+    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 8, y = 2 } ] } )
+    , ( Types.Opponent, { figure = Types.Knight, moves = [ { x = 2, y = 1 } ] } )
+    , ( Types.Opponent, { figure = Types.Knight, moves = [ { x = 7, y = 1 } ] } )
+    , ( Types.Opponent, { figure = Types.Bishop, moves = [ { x = 3, y = 1 } ] } )
+    , ( Types.Opponent, { figure = Types.Bishop, moves = [ { x = 6, y = 1 } ] } )
+    , ( Types.Opponent, { figure = Types.King, moves = [ { x = 5, y = 1 } ] } )
+    , ( Types.Opponent, { figure = Types.Queen, moves = [ { x = 4, y = 1 } ] } )
     ]
 
 
@@ -28,28 +28,28 @@ opponentPositions =
 -- QUEEN starts
 
 
-queenPossitionsTest1 : List Chess.FigureState
+queenPossitionsTest1 : List Types.FigureState
 queenPossitionsTest1 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-queenExpectedTestUnit1 : Chess.NextMoves
+queenExpectedTestUnit1 : Types.NextMoves
 queenExpectedTestUnit1 =
     { potentialCaptures = [ { x = 8, y = 2 }, { x = 7, y = 7 }, { x = 2, y = 2 } ]
     , potentialMoves =
@@ -71,28 +71,28 @@ queenExpectedTestUnit1 =
     }
 
 
-queenPossitionsTest2 : List Chess.FigureState
+queenPossitionsTest2 : List Types.FigureState
 queenPossitionsTest2 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 2, y = 8 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 2, y = 8 } ] } )
     ]
 
 
-queenExpectedTestUnit2 : Chess.NextMoves
+queenExpectedTestUnit2 : Types.NextMoves
 queenExpectedTestUnit2 =
     { potentialCaptures =
         [ { x = 2, y = 2 }
@@ -118,28 +118,28 @@ queenExpectedTestUnit2 =
     }
 
 
-queenPossitionsTest3 : List Chess.FigureState
+queenPossitionsTest3 : List Types.FigureState
 queenPossitionsTest3 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 7, y = 3 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 7, y = 3 } ] } )
     ]
 
 
-queenExpectedTestUnit3 : Chess.NextMoves
+queenExpectedTestUnit3 : Types.NextMoves
 queenExpectedTestUnit3 =
     { potentialCaptures =
         [ { x = 7, y = 1 }
@@ -164,28 +164,28 @@ queenExpectedTestUnit3 =
 -- KING start
 
 
-kingPossitionsTest1 : List Chess.FigureState
+kingPossitionsTest1 : List Types.FigureState
 kingPossitionsTest1 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-kingExpectedTestUnit1 : Chess.NextMoves
+kingExpectedTestUnit1 : Types.NextMoves
 kingExpectedTestUnit1 =
     { potentialCaptures = []
     , potentialMoves =
@@ -199,28 +199,28 @@ kingExpectedTestUnit1 =
     }
 
 
-kingPossitionsTest2 : List Chess.FigureState
+kingPossitionsTest2 : List Types.FigureState
 kingPossitionsTest2 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 6, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 2, y = 8 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 6, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 2, y = 8 } ] } )
     ]
 
 
-kingExpectedTestUnit2 : Chess.NextMoves
+kingExpectedTestUnit2 : Types.NextMoves
 kingExpectedTestUnit2 =
     { potentialCaptures =
         [ { x = 5, y = 2 }
@@ -235,28 +235,28 @@ kingExpectedTestUnit2 =
     }
 
 
-kingPossitionsTest3 : List Chess.FigureState
+kingPossitionsTest3 : List Types.FigureState
 kingPossitionsTest3 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 1, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 7, y = 3 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 1, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 7, y = 3 } ] } )
     ]
 
 
-kingExpectedTestUnit3 : Chess.NextMoves
+kingExpectedTestUnit3 : Types.NextMoves
 kingExpectedTestUnit3 =
     { potentialCaptures =
         [ { x = 1, y = 2 }, { x = 2, y = 2 } ]
@@ -275,28 +275,28 @@ kingExpectedTestUnit3 =
 -- ROOK starts
 
 
-rookPossitionsTest1 : List Chess.FigureState
+rookPossitionsTest1 : List Types.FigureState
 rookPossitionsTest1 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-rookExpectedTestUnit1 : Chess.NextMoves
+rookExpectedTestUnit1 : Types.NextMoves
 rookExpectedTestUnit1 =
     { potentialCaptures =
         [ { x = 7, y = 7 } ]
@@ -314,28 +314,28 @@ rookExpectedTestUnit1 =
     }
 
 
-rookPossitionsTest2 : List Chess.FigureState
+rookPossitionsTest2 : List Types.FigureState
 rookPossitionsTest2 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 6, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 6, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-rookExpectedTestUnit2 : Chess.NextMoves
+rookExpectedTestUnit2 : Types.NextMoves
 rookExpectedTestUnit2 =
     { potentialCaptures = [ { x = 6, y = 2 } ]
     , potentialMoves =
@@ -349,28 +349,28 @@ rookExpectedTestUnit2 =
     }
 
 
-rookPossitionsTest3 : List Chess.FigureState
+rookPossitionsTest3 : List Types.FigureState
 rookPossitionsTest3 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 1, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 1, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-rookExpectedTestUnit3 : Chess.NextMoves
+rookExpectedTestUnit3 : Types.NextMoves
 rookExpectedTestUnit3 =
     { potentialCaptures = []
     , potentialMoves =
@@ -388,28 +388,28 @@ rookExpectedTestUnit3 =
 -- KNIGHT starts
 
 
-knightPossitionsTest1 : List Chess.FigureState
+knightPossitionsTest1 : List Types.FigureState
 knightPossitionsTest1 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 6, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 6, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-knightExpectedTestUnit1 : Chess.NextMoves
+knightExpectedTestUnit1 : Types.NextMoves
 knightExpectedTestUnit1 =
     { potentialCaptures = []
     , potentialMoves =
@@ -423,28 +423,28 @@ knightExpectedTestUnit1 =
     }
 
 
-knightPossitionsTest2 : List Chess.FigureState
+knightPossitionsTest2 : List Types.FigureState
 knightPossitionsTest2 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 6, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 5, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 6, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 5, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-knightExpectedTestUnit2 : Chess.NextMoves
+knightExpectedTestUnit2 : Types.NextMoves
 knightExpectedTestUnit2 =
     { potentialCaptures = [ { x = 4, y = 2 }, { x = 6, y = 2 } ]
     , potentialMoves =
@@ -457,28 +457,28 @@ knightExpectedTestUnit2 =
     }
 
 
-knightPossitionsTest3 : List Chess.FigureState
+knightPossitionsTest3 : List Types.FigureState
 knightPossitionsTest3 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 1, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 3, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 1, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 3, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-knightExpectedTestUnit3 : Chess.NextMoves
+knightExpectedTestUnit3 : Types.NextMoves
 knightExpectedTestUnit3 =
     { potentialCaptures =
         [ { x = 1, y = 2 }
@@ -499,28 +499,28 @@ knightExpectedTestUnit3 =
 -- BISHOP start
 
 
-bishopPossitionsTest1 : List Chess.FigureState
+bishopPossitionsTest1 : List Types.FigureState
 bishopPossitionsTest1 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 4, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 6, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 4, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 6, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-bishopExpectedTestUnit1 : Chess.NextMoves
+bishopExpectedTestUnit1 : Types.NextMoves
 bishopExpectedTestUnit1 =
     { potentialCaptures =
         [ { x = 8, y = 1 }
@@ -536,28 +536,28 @@ bishopExpectedTestUnit1 =
     }
 
 
-bishopPossitionsTest2 : List Chess.FigureState
+bishopPossitionsTest2 : List Types.FigureState
 bishopPossitionsTest2 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 6, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 5, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 6, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 6, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 5, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 6, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-bishopExpectedTestUnit2 : Chess.NextMoves
+bishopExpectedTestUnit2 : Types.NextMoves
 bishopExpectedTestUnit2 =
     { potentialCaptures =
         [ { x = 8, y = 1 }
@@ -569,28 +569,28 @@ bishopExpectedTestUnit2 =
     }
 
 
-bishopPossitionsTest3 : List Chess.FigureState
+bishopPossitionsTest3 : List Types.FigureState
 bishopPossitionsTest3 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 1, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 2, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 3, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 1, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 2, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 3, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-bishopExpectedTestUnit3 : Chess.NextMoves
+bishopExpectedTestUnit3 : Types.NextMoves
 bishopExpectedTestUnit3 =
     { potentialCaptures =
         [ { x = 3, y = 2 }
@@ -608,80 +608,80 @@ bishopExpectedTestUnit3 =
 -- PAWN start
 
 
-pawnPossitionsTest1 : List Chess.FigureState
+pawnPossitionsTest1 : List Types.FigureState
 pawnPossitionsTest1 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 4, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 6, y = 7 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 4, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 6, y = 7 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-pawnExpectedTestUnit1 : Chess.NextMoves
+pawnExpectedTestUnit1 : Types.NextMoves
 pawnExpectedTestUnit1 =
     { potentialCaptures = [], potentialMoves = [ { x = 7, y = 3 } ] }
 
 
-pawnPossitionsTest2 : List Chess.FigureState
+pawnPossitionsTest2 : List Types.FigureState
 pawnPossitionsTest2 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 6, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 5, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 6, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 6, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 5, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 6, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-pawnExpectedTestUnit2 : Chess.NextMoves
+pawnExpectedTestUnit2 : Types.NextMoves
 pawnExpectedTestUnit2 =
     { potentialCaptures = [ { x = 8, y = 2 }, { x = 6, y = 2 } ], potentialMoves = [ { x = 7, y = 2 } ] }
 
 
-pawnPossitionsTest3 : List Chess.FigureState
+pawnPossitionsTest3 : List Types.FigureState
 pawnPossitionsTest3 =
-    [ ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 1, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 6, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 4, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 1, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 7, y = 2 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 2, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Knight, moves = [ { x = 3, y = 3 } ] } )
-    , ( Chess.Me, { figure = Chess.Pawn, moves = [ { x = 3, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Chess.Me, { figure = Chess.Queen, moves = [ { x = 5, y = 5 } ] } )
+    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 1, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 6, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 4, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 2 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 2, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 3, y = 3 } ] } )
+    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 3, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
+    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
     ]
 
 
-pawnExpectedTestUnit3 : Chess.NextMoves
+pawnExpectedTestUnit3 : Types.NextMoves
 pawnExpectedTestUnit3 =
     { potentialCaptures = [ { x = 6, y = 1 }, { x = 8, y = 1 } ], potentialMoves = [] }
 

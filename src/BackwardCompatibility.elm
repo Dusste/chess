@@ -3,7 +3,6 @@ module BackwardCompatibility exposing (Model, Msg, init, update, view)
 -- import Html.Events as HE
 -- import List.Extra
 
-import Chess
 import Dict exposing (Dict)
 import Diff
 import Helper.Test as Helper
@@ -13,29 +12,30 @@ import Html.Extra
 import Json.Encode
 import Svg
 import Svg.Attributes as SVGHA
+import Types
+import Util
 
 
 
 -- import Svg.Events
 
 
-type Msg
-    = NoOp
+type alias Msg =
+    Types.BackwardCompatibilityMsg
 
 
 type alias Model =
-    { figure : Maybe Chess.Figure
-    }
+    Types.BackwardCompatibilityModel
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
+        Types.NoOpB ->
             ( model, Cmd.none )
 
 
-init : Maybe Chess.Figure -> ( Model, Cmd Msg )
+init : Maybe Types.Figure -> ( Model, Cmd Msg )
 init maybeFigure =
     ( { figure = maybeFigure }, Cmd.none )
 
@@ -53,7 +53,7 @@ view model =
                 [ HA.href "/tests/queen"
                 , HA.class <|
                     "hover:bg-gray-400 font-bold py-2 px-4 rounded-l"
-                        ++ (if model.figure == Just Chess.Queen then
+                        ++ (if model.figure == Just Types.Queen then
                                 " bg-blue-500 text-white text-white"
 
                             else
@@ -65,7 +65,7 @@ view model =
                 [ HA.href "/tests/king"
                 , HA.class <|
                     "hover:bg-gray-400 font-bold py-2 px-4"
-                        ++ (if model.figure == Just Chess.King then
+                        ++ (if model.figure == Just Types.King then
                                 " bg-blue-500 text-white"
 
                             else
@@ -77,7 +77,7 @@ view model =
                 [ HA.href "/tests/rook"
                 , HA.class <|
                     "hover:bg-gray-400 font-bold py-2 px-4"
-                        ++ (if model.figure == Just Chess.Rook then
+                        ++ (if model.figure == Just Types.Rook then
                                 " bg-blue-500 text-white"
 
                             else
@@ -89,7 +89,7 @@ view model =
                 [ HA.href "/tests/knight"
                 , HA.class <|
                     "hover:bg-gray-400 font-bold py-2 px-4"
-                        ++ (if model.figure == Just Chess.Knight then
+                        ++ (if model.figure == Just Types.Knight then
                                 " bg-blue-500 text-white"
 
                             else
@@ -101,7 +101,7 @@ view model =
                 [ HA.href "/tests/bishop"
                 , HA.class <|
                     "hover:bg-gray-400 font-bold py-2 px-4"
-                        ++ (if model.figure == Just Chess.Bishop then
+                        ++ (if model.figure == Just Types.Bishop then
                                 " bg-blue-500 text-white"
 
                             else
@@ -113,7 +113,7 @@ view model =
                 [ HA.href "/tests/pawn"
                 , HA.class <|
                     "hover:bg-gray-400 font-bold py-2 px-4 rounded-r"
-                        ++ (if model.figure == Just Chess.Pawn then
+                        ++ (if model.figure == Just Types.Pawn then
                                 " bg-blue-500 text-white"
 
                             else
@@ -125,14 +125,14 @@ view model =
         , Html.div
             [ HA.class "" ]
             [ case model.figure of
-                Just Chess.Queen ->
+                Just Types.Queen ->
                     let
                         queenTestUnitLst =
                             [ { startPosition = { x = 5, y = 5 }
-                              , maybeSpot = Chess.fieldToSpot { x = 5, y = 5 }
+                              , maybeSpot = Util.fieldToSpot { x = 5, y = 5 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Queen
+                                    Util.getNextPossibleMoves
+                                        Types.Queen
                                         { x = 5, y = 5 }
                                         Helper.opponentPositions
                                         Helper.queenPossitionsTest1
@@ -141,10 +141,10 @@ view model =
                               , myPossitions = Helper.queenPossitionsTest1
                               }
                             , { startPosition = { x = 2, y = 8 }
-                              , maybeSpot = Chess.fieldToSpot { x = 2, y = 8 }
+                              , maybeSpot = Util.fieldToSpot { x = 2, y = 8 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Queen
+                                    Util.getNextPossibleMoves
+                                        Types.Queen
                                         { x = 2, y = 8 }
                                         Helper.opponentPositions
                                         Helper.queenPossitionsTest2
@@ -153,10 +153,10 @@ view model =
                               , myPossitions = Helper.queenPossitionsTest2
                               }
                             , { startPosition = { x = 7, y = 3 }
-                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 3 }
+                              , maybeSpot = Util.fieldToSpot { x = 7, y = 3 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Queen
+                                    Util.getNextPossibleMoves
+                                        Types.Queen
                                         { x = 7, y = 3 }
                                         Helper.opponentPositions
                                         Helper.queenPossitionsTest3
@@ -176,14 +176,14 @@ view model =
                             (List.map testUnitView queenTestUnitLst)
                         ]
 
-                Just Chess.King ->
+                Just Types.King ->
                     let
                         kingTestUnitLst =
                             [ { startPosition = { x = 5, y = 6 }
-                              , maybeSpot = Chess.fieldToSpot { x = 5, y = 6 }
+                              , maybeSpot = Util.fieldToSpot { x = 5, y = 6 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.King
+                                    Util.getNextPossibleMoves
+                                        Types.King
                                         { x = 5, y = 6 }
                                         Helper.opponentPositions
                                         Helper.kingPossitionsTest1
@@ -192,10 +192,10 @@ view model =
                               , myPossitions = Helper.kingPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 3 }
-                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 3 }
+                              , maybeSpot = Util.fieldToSpot { x = 6, y = 3 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.King
+                                    Util.getNextPossibleMoves
+                                        Types.King
                                         { x = 6, y = 3 }
                                         Helper.opponentPositions
                                         Helper.kingPossitionsTest2
@@ -204,10 +204,10 @@ view model =
                               , myPossitions = Helper.kingPossitionsTest2
                               }
                             , { startPosition = { x = 1, y = 3 }
-                              , maybeSpot = Chess.fieldToSpot { x = 1, y = 3 }
+                              , maybeSpot = Util.fieldToSpot { x = 1, y = 3 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.King
+                                    Util.getNextPossibleMoves
+                                        Types.King
                                         { x = 1, y = 3 }
                                         Helper.opponentPositions
                                         Helper.kingPossitionsTest3
@@ -227,14 +227,14 @@ view model =
                             (List.map testUnitView kingTestUnitLst)
                         ]
 
-                Just Chess.Rook ->
+                Just Types.Rook ->
                     let
                         rookTestUnitLst =
                             [ { startPosition = { x = 4, y = 7 }
-                              , maybeSpot = Chess.fieldToSpot { x = 4, y = 7 }
+                              , maybeSpot = Util.fieldToSpot { x = 4, y = 7 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Rook
+                                    Util.getNextPossibleMoves
+                                        Types.Rook
                                         { x = 4, y = 7 }
                                         Helper.opponentPositions
                                         Helper.rookPossitionsTest1
@@ -243,10 +243,10 @@ view model =
                               , myPossitions = Helper.rookPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 4 }
-                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 4 }
+                              , maybeSpot = Util.fieldToSpot { x = 6, y = 4 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Rook
+                                    Util.getNextPossibleMoves
+                                        Types.Rook
                                         { x = 6, y = 4 }
                                         Helper.opponentPositions
                                         Helper.rookPossitionsTest2
@@ -255,10 +255,10 @@ view model =
                               , myPossitions = Helper.rookPossitionsTest2
                               }
                             , { startPosition = { x = 1, y = 8 }
-                              , maybeSpot = Chess.fieldToSpot { x = 1, y = 8 }
+                              , maybeSpot = Util.fieldToSpot { x = 1, y = 8 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Rook
+                                    Util.getNextPossibleMoves
+                                        Types.Rook
                                         { x = 1, y = 8 }
                                         Helper.opponentPositions
                                         Helper.rookPossitionsTest3
@@ -278,14 +278,14 @@ view model =
                             (List.map testUnitView rookTestUnitLst)
                         ]
 
-                Just Chess.Knight ->
+                Just Types.Knight ->
                     let
                         knightTestUnitLst =
                             [ { startPosition = { x = 6, y = 7 }
-                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 7 }
+                              , maybeSpot = Util.fieldToSpot { x = 6, y = 7 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Knight
+                                    Util.getNextPossibleMoves
+                                        Types.Knight
                                         { x = 6, y = 7 }
                                         Helper.opponentPositions
                                         Helper.knightPossitionsTest1
@@ -294,10 +294,10 @@ view model =
                               , myPossitions = Helper.knightPossitionsTest1
                               }
                             , { startPosition = { x = 5, y = 4 }
-                              , maybeSpot = Chess.fieldToSpot { x = 5, y = 4 }
+                              , maybeSpot = Util.fieldToSpot { x = 5, y = 4 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Knight
+                                    Util.getNextPossibleMoves
+                                        Types.Knight
                                         { x = 5, y = 4 }
                                         Helper.opponentPositions
                                         Helper.knightPossitionsTest2
@@ -306,10 +306,10 @@ view model =
                               , myPossitions = Helper.knightPossitionsTest2
                               }
                             , { startPosition = { x = 3, y = 3 }
-                              , maybeSpot = Chess.fieldToSpot { x = 3, y = 3 }
+                              , maybeSpot = Util.fieldToSpot { x = 3, y = 3 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Knight
+                                    Util.getNextPossibleMoves
+                                        Types.Knight
                                         { x = 3, y = 3 }
                                         Helper.opponentPositions
                                         Helper.knightPossitionsTest3
@@ -329,14 +329,14 @@ view model =
                             (List.map testUnitView knightTestUnitLst)
                         ]
 
-                Just Chess.Bishop ->
+                Just Types.Bishop ->
                     let
                         bishopTestUnitLst =
                             [ { startPosition = { x = 4, y = 5 }
-                              , maybeSpot = Chess.fieldToSpot { x = 4, y = 5 }
+                              , maybeSpot = Util.fieldToSpot { x = 4, y = 5 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Bishop
+                                    Util.getNextPossibleMoves
+                                        Types.Bishop
                                         { x = 4, y = 5 }
                                         Helper.opponentPositions
                                         Helper.bishopPossitionsTest1
@@ -345,10 +345,10 @@ view model =
                               , myPossitions = Helper.bishopPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 3 }
-                              , maybeSpot = Chess.fieldToSpot { x = 6, y = 3 }
+                              , maybeSpot = Util.fieldToSpot { x = 6, y = 3 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Bishop
+                                    Util.getNextPossibleMoves
+                                        Types.Bishop
                                         { x = 6, y = 3 }
                                         Helper.opponentPositions
                                         Helper.bishopPossitionsTest2
@@ -357,10 +357,10 @@ view model =
                               , myPossitions = Helper.bishopPossitionsTest2
                               }
                             , { startPosition = { x = 2, y = 3 }
-                              , maybeSpot = Chess.fieldToSpot { x = 2, y = 3 }
+                              , maybeSpot = Util.fieldToSpot { x = 2, y = 3 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Bishop
+                                    Util.getNextPossibleMoves
+                                        Types.Bishop
                                         { x = 2, y = 3 }
                                         Helper.opponentPositions
                                         Helper.bishopPossitionsTest3
@@ -380,14 +380,14 @@ view model =
                             (List.map testUnitView bishopTestUnitLst)
                         ]
 
-                Just Chess.Pawn ->
+                Just Types.Pawn ->
                     let
                         pawnTestUnitLst =
                             [ { startPosition = { x = 7, y = 4 }
-                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 4 }
+                              , maybeSpot = Util.fieldToSpot { x = 7, y = 4 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Pawn
+                                    Util.getNextPossibleMoves
+                                        Types.Pawn
                                         { x = 7, y = 4 }
                                         Helper.opponentPositions
                                         Helper.pawnPossitionsTest1
@@ -396,10 +396,10 @@ view model =
                               , myPossitions = Helper.pawnPossitionsTest1
                               }
                             , { startPosition = { x = 7, y = 3 }
-                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 3 }
+                              , maybeSpot = Util.fieldToSpot { x = 7, y = 3 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Pawn
+                                    Util.getNextPossibleMoves
+                                        Types.Pawn
                                         { x = 7, y = 3 }
                                         Helper.opponentPositions
                                         Helper.pawnPossitionsTest2
@@ -408,10 +408,10 @@ view model =
                               , myPossitions = Helper.pawnPossitionsTest2
                               }
                             , { startPosition = { x = 7, y = 2 }
-                              , maybeSpot = Chess.fieldToSpot { x = 7, y = 2 }
+                              , maybeSpot = Util.fieldToSpot { x = 7, y = 2 }
                               , actual =
-                                    Chess.getNextPossibleMoves
-                                        Chess.Pawn
+                                    Util.getNextPossibleMoves
+                                        Types.Pawn
                                         { x = 7, y = 2 }
                                         Helper.opponentPositions
                                         Helper.pawnPossitionsTest3
@@ -441,11 +441,11 @@ view model =
 
 testUnitView :
     { maybeSpot : Maybe String
-    , startPosition : Chess.Field
-    , expected : Chess.NextMoves
-    , actual : Chess.NextMoves
-    , opponentPositions : List Chess.FigureState
-    , myPossitions : List Chess.FigureState
+    , startPosition : Types.Field
+    , expected : Types.NextMoves
+    , actual : Types.NextMoves
+    , opponentPositions : List Types.FigureState
+    , myPossitions : List Types.FigureState
     }
     -> Html Msg
 testUnitView { maybeSpot, startPosition, expected, actual, opponentPositions, myPossitions } =
@@ -470,7 +470,7 @@ testUnitView { maybeSpot, startPosition, expected, actual, opponentPositions, my
         ]
 
 
-getTestResults : Chess.NextMoves -> Chess.NextMoves -> Html Msg
+getTestResults : Types.NextMoves -> Types.NextMoves -> Html Msg
 getTestResults actual_ expected_ =
     let
         isTrue =
@@ -479,7 +479,7 @@ getTestResults actual_ expected_ =
         potentialMovesDiff =
             Diff.diff expected_.potentialMoves actual_.potentialMoves
 
-        potentialCapturesDiff : List (Diff.Change Chess.Field)
+        potentialCapturesDiff : List (Diff.Change Types.Field)
         potentialCapturesDiff =
             Diff.diff expected_.potentialCaptures actual_.potentialCaptures
     in
@@ -538,7 +538,7 @@ getTestResults actual_ expected_ =
         ]
 
 
-toDiffHtml : Diff.Change Chess.Field -> Html msg
+toDiffHtml : Diff.Change Types.Field -> Html msg
 toDiffHtml diffField =
     case diffField of
         Diff.Added f ->
@@ -565,7 +565,7 @@ toDiffHtml diffField =
                 ]
 
 
-encodeFieldRecord : Chess.Field -> String
+encodeFieldRecord : Types.Field -> String
 encodeFieldRecord field =
     [ ( "x", Json.Encode.int field.x )
     , ( "y", Json.Encode.int field.y )
@@ -575,32 +575,32 @@ encodeFieldRecord field =
         |> String.replace "\"" ""
 
 
-toTuple : Chess.Field -> ( Int, Int )
+toTuple : Types.Field -> ( Int, Int )
 toTuple { x, y } =
     ( x, y )
 
 
-playerTypeToText : Chess.PlayerType -> String
+playerTypeToText : Types.PlayerType -> String
 playerTypeToText pt =
     case pt of
-        Chess.Me ->
+        Types.Me ->
             "X"
 
-        Chess.Opponent ->
+        Types.Opponent ->
             "O"
 
 
-playerTypeToColor : Chess.PlayerType -> String
+playerTypeToColor : Types.PlayerType -> String
 playerTypeToColor pt =
     case pt of
-        Chess.Me ->
+        Types.Me ->
             "blue"
 
-        Chess.Opponent ->
+        Types.Opponent ->
             "red"
 
 
-figureOnField : ( String, String ) -> Chess.PlayerType -> Bool -> Svg.Svg Msg
+figureOnField : ( String, String ) -> Types.PlayerType -> Bool -> Svg.Svg Msg
 figureOnField ( x, y ) pt isMe =
     -- figureOnField : ("25", "35") -> Figure on { x = 1, y = 1 }
     Svg.text_
@@ -617,7 +617,7 @@ figureOnField ( x, y ) pt isMe =
         ]
 
 
-fromFieldToSvgCoordinates : Int -> Int -> Chess.FigureState -> Svg.Svg Msg
+fromFieldToSvgCoordinates : Int -> Int -> Types.FigureState -> Svg.Svg Msg
 fromFieldToSvgCoordinates x1 y1 ( pt, { figure, moves } ) =
     moves
         |> List.head
@@ -626,7 +626,7 @@ fromFieldToSvgCoordinates x1 y1 ( pt, { figure, moves } ) =
                 let
                     isMe : Bool
                     isMe =
-                        Chess.isEqualPosition field.x x1 field.y y1
+                        Util.isEqualPosition field.x x1 field.y y1
                 in
                 dictOfCoordinates
                     |> Dict.get (toTuple field)
@@ -670,7 +670,7 @@ generateCoordinateDict rows cols =
         |> Dict.fromList
 
 
-currentSetupToSvg : List Chess.FigureState -> List Chess.FigureState -> Int -> Int -> Html Msg
+currentSetupToSvg : List Types.FigureState -> List Types.FigureState -> Int -> Int -> Html Msg
 currentSetupToSvg oppPositions mPositions x1 y1 =
     Svg.svg
         [ SVGHA.class "w-[100%] h-[100%]", SVGHA.width "400", SVGHA.height "400", SVGHA.viewBox "0 0 400 400" ]
