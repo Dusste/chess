@@ -157,20 +157,9 @@ update msg model =
         Types.ClickedLink urlRequest ->
             case urlRequest of
                 Browser.External href ->
-                    let
-                        _ =
-                            Debug.log "External" href
-                    in
                     ( model, Nav.load href )
 
                 Browser.Internal url ->
-                    let
-                        isInvited =
-                            Query.enum "invite" (Dict.fromList [ ( "true", True ), ( "false", False ) ])
-
-                        _ =
-                            Debug.log "INVITED" isInvited
-                    in
                     ( model
                     , Nav.pushUrl model.key (Url.toString url)
                     )
@@ -306,20 +295,6 @@ updateFromBackend msg model =
 
                 Types.ResponseError error ->
                     ( model, Cmd.none )
-
-
-
--- Types.PositionsUrl query ->
---     let
---         url =
---             model.url
---         uUrl =
---             { url | query = Just query }
---         _ =
---             Debug.log "FE: PositionsUrl" query
---         -- posts : Parser (Maybe (List Int))
---     in
---     ( { model | url = uUrl }, Nav.pushUrl model.key query )
 
 
 view : Model -> Browser.Document Types.FrontendMsg

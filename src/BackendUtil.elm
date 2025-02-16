@@ -36,8 +36,8 @@ coordinateInMirror x =
             x
 
 
-convertRoles : Bool -> List Types.FigureState -> List Types.FigureState
-convertRoles convertMeToOpponent player =
+convertRoles : List Types.FigureState -> List Types.FigureState
+convertRoles player =
     List.map
         (\t ->
             let
@@ -57,11 +57,12 @@ convertRoles convertMeToOpponent player =
                                 }
                            )
             in
-            ( if convertMeToOpponent then
-                Types.Opponent
+            ( case Tuple.first t of
+                Types.Opponent ->
+                    Types.Me
 
-              else
-                Types.Me
+                Types.Me ->
+                    Types.Opponent
             , mirroredFigureMoves
             )
         )

@@ -150,11 +150,24 @@ updateFromFrontend sessionId clientId msg model =
 
         Types.JoinGame roomId ->
             let
-                haveTwoPlayers : Bool
-                haveTwoPlayers =
+                checkForProblems : a -> Result String a
+                checkForProblems a =
+                    -- Check for any misbehaviour and if all good just send wahtever passed
                     Dict.get roomId model.games
-                        |> Maybe.map (\{ invitee } -> invitee == Nothing)
-                        |> Maybe.withDefault False
+                        |> Maybe.map
+                            (\{ invitee, owner } ->
+                                case invitee of
+                                    Just _ ->
+                                        Err "JoinGame: Game has already started"
+
+                                    Nothing ->
+                                        if sessionId == Tuple.first owner then
+                                            Err "JoinGame: You are trying to play game with yourself, that is not posible"
+
+                                        else
+                                            Ok a
+                            )
+                        |> Maybe.withDefault (Err "Something went terribly wrong")
 
                 updated : ( Model, Cmd Types.BackendMsg )
                 updated =
@@ -193,11 +206,11 @@ updateFromFrontend sessionId clientId msg model =
 
                                     convertOpponentToMe =
                                         -- Opponent is looking in game from the first person
-                                        BackendUtil.convertRoles False (Tuple.second invitee)
+                                        BackendUtil.convertRoles (Tuple.second invitee)
 
                                     convertMeToOpponent =
                                         -- From Opponent's perspective - I am Opponent
-                                        BackendUtil.convertRoles True (Tuple.second owner)
+                                        BackendUtil.convertRoles (Tuple.second owner)
 
                                     positionsForInvitee =
                                         ( convertMeToOpponent, convertOpponentToMe )
@@ -212,110 +225,95 @@ updateFromFrontend sessionId clientId msg model =
                         |> Cmd.batch
                     )
             in
-            if haveTwoPlayers then
-                updated
+            case checkForProblems updated of
+                Err err ->
+                    ( model
+                    , Lamdera.sendToFrontend sessionId
+                        (Types.BeToChess <| Types.ResponseError err)
+                    )
 
-            else
-                ( model, Lamdera.sendToFrontend sessionId (Types.BeToChess <| Types.ResponseError "JoinGame: Game has already started") )
+                Ok updated_ ->
+                    updated_
 
         Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId isFromInviteePerspective ( pl1, pl2 ) ->
             let
-                haveTwoPlayers : Bool
-                haveTwoPlayers =
-                    Dict.get roomId model.games
-                        |> Maybe.map (\{ invitee } -> invitee /= Nothing)
-                        |> Maybe.withDefault False
-
-                updated : ( Model, Cmd Types.BackendMsg )
-                updated =
-                    let
-                        updateGames :
-                            Dict
-                                String
-                                { owner : ( Lamdera.SessionId, List Types.FigureState )
-                                , invitee : Maybe ( Lamdera.SessionId, List Types.FigureState )
-                                }
-                        updateGames =
-                            if isFromInviteePerspective then
-                                Dict.update roomId
-                                    (Maybe.andThen
-                                        (\rec ->
-                                            Maybe.map
-                                                (\invitee_ ->
-                                                    { invitee = Just ( Tuple.first invitee_, BackendUtil.convertRoles True pl2 )
-                                                    , owner = ( Tuple.first rec.owner, BackendUtil.convertRoles False pl1 )
-                                                    }
-                                                )
-                                                rec.invitee
+                updateGames :
+                    Dict
+                        String
+                        { owner : ( Lamdera.SessionId, List Types.FigureState )
+                        , invitee : Maybe ( Lamdera.SessionId, List Types.FigureState )
+                        }
+                updateGames =
+                    if isFromInviteePerspective then
+                        Dict.update roomId
+                            (Maybe.andThen
+                                (\rec ->
+                                    Maybe.map
+                                        (\invitee_ ->
+                                            { invitee = Just ( Tuple.first invitee_, BackendUtil.convertRoles pl2 )
+                                            , owner = ( Tuple.first rec.owner, BackendUtil.convertRoles pl1 )
+                                            }
                                         )
-                                    )
-                                    model.games
+                                        rec.invitee
+                                )
+                            )
+                            model.games
 
-                            else
-                                Dict.update roomId
-                                    (Maybe.andThen
-                                        (\rec ->
-                                            Maybe.map
-                                                (\invitee_ ->
-                                                    { invitee = Just ( Tuple.first invitee_, pl1 )
-                                                    , owner = ( Tuple.first rec.owner, pl2 )
-                                                    }
-                                                )
-                                                rec.invitee
+                    else
+                        Dict.update roomId
+                            (Maybe.andThen
+                                (\rec ->
+                                    Maybe.map
+                                        (\invitee_ ->
+                                            { invitee = Just ( Tuple.first invitee_, pl1 )
+                                            , owner = ( Tuple.first rec.owner, pl2 )
+                                            }
                                         )
-                                    )
-                                    model.games
-                    in
-                    ( { model
-                        | games = updateGames
-                      }
-                    , updateGames
-                        |> Dict.foldl
-                            (\_ { owner, invitee } _ ->
-                                case invitee of
-                                    Just invitee_ ->
-                                        [ { owner = owner, invitee = invitee_ } ]
-
-                                    Nothing ->
-                                        []
+                                        rec.invitee
+                                )
                             )
-                            []
-                        |> List.map
-                            (\{ owner, invitee } ->
-                                let
-                                    positionsForOwner =
-                                        ( Tuple.second invitee, Tuple.second owner )
-
-                                    convertOpponentToMe =
-                                        -- Opponent is looking in game from the first person
-                                        BackendUtil.convertRoles False (Tuple.second invitee)
-
-                                    convertMeToOpponent =
-                                        -- From Opponent's perspective - I am Opponent
-                                        BackendUtil.convertRoles True (Tuple.second owner)
-
-                                    positionsForInvitee =
-                                        ( convertMeToOpponent, convertOpponentToMe )
-                                in
-                                [ Lamdera.sendToFrontend (Tuple.first owner)
-                                    (Types.BeToChess <| Types.GameCurrentState positionsForOwner)
-                                , Lamdera.sendToFrontend (Tuple.first invitee)
-                                    (Types.BeToChess <| Types.GameCurrentState positionsForInvitee)
-                                ]
-                            )
-                        |> List.concat
-                        |> Cmd.batch
-                    )
+                            model.games
             in
-            if haveTwoPlayers then
-                updated
+            ( { model
+                | games = updateGames
+              }
+            , updateGames
+                |> Dict.foldl
+                    (\_ { owner, invitee } _ ->
+                        case invitee of
+                            Just invitee_ ->
+                                [ { owner = owner, invitee = invitee_ } ]
 
-            else
-                ( model
-                , Lamdera.sendToFrontend
-                    sessionId
-                    (Types.BeToChess <| Types.ResponseError "UpdateGame: Game has already started")
-                )
+                            Nothing ->
+                                []
+                    )
+                    []
+                |> List.map
+                    (\{ owner, invitee } ->
+                        let
+                            positionsForOwner =
+                                ( Tuple.second invitee, Tuple.second owner )
+
+                            convertOpponentToMe =
+                                -- Opponent is looking in game from the first person
+                                BackendUtil.convertRoles (Tuple.second invitee)
+
+                            convertMeToOpponent =
+                                -- From Opponent's perspective - I am Opponent
+                                BackendUtil.convertRoles (Tuple.second owner)
+
+                            positionsForInvitee =
+                                ( convertMeToOpponent, convertOpponentToMe )
+                        in
+                        [ Lamdera.sendToFrontend (Tuple.first owner)
+                            (Types.BeToChess <| Types.GameCurrentState positionsForOwner)
+                        , Lamdera.sendToFrontend (Tuple.first invitee)
+                            (Types.BeToChess <| Types.GameCurrentState positionsForInvitee)
+                        ]
+                    )
+                |> List.concat
+                |> Cmd.batch
+            )
 
 
 app =
