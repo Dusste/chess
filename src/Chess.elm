@@ -168,7 +168,7 @@ initialModel urlString isInvited roomId =
     , player2 = []
     , possibleNextMoves = Types.Idle
     , error = Nothing
-    , player1Captures = []
+    , player1Captures = [] -- TODO Need to send captures from BE for opponent
     , player2Captures = []
     , urlString = urlString
     , isInvited = isInvited
@@ -282,7 +282,7 @@ update msg model =
 
                 Nothing ->
                     case model.possibleNextMoves of
-                        Types.NextMove previousField nextMoves ->
+                        Types.NextMove currentField nextMoves ->
                             -- Alright ! Maybe we can move figure, let's check if selected field is among allowed fields !
                             let
                                 isOkToMove : Bool
@@ -305,7 +305,7 @@ update msg model =
                                                         ( pt
                                                         , { fs
                                                             | moves =
-                                                                if List.head fs.moves == Just previousField then
+                                                                if List.head fs.moves == Just currentField then
                                                                     { x = desiredOrCurrentPosition.x
                                                                     , y = desiredOrCurrentPosition.y
                                                                     }
@@ -349,32 +349,27 @@ update msg model =
             case model.possibleNextMoves of
                 Types.NextMove attackerCurrentField { potentialCaptures } ->
                     let
-                        capturePosition : Maybe Types.FigureState
-                        capturePosition =
-                            List.Extra.find
-                                (\( pt, { figure, moves } ) ->
-                                    moves
-                                        |> List.head
-                                        |> Maybe.map
-                                            (\f ->
-                                                Util.isEqualPosition f.x positionToCapture.x f.y positionToCapture.y
-                                            )
-                                        |> Maybe.withDefault False
-                                )
-                                model.player1
+                        positionToCaptureFound : Maybe ( Types.Figure, { x : Int, y : Int } )
+                        positionToCaptureFound =
+                            -- Try to find desired field within potential captures fields
+                            potentialCaptures
+                                |> List.Extra.find
+                                    (\f ->
+                                        Util.isEqualPosition f.x positionToCapture.x f.y positionToCapture.y
+                                    )
+                                |> Maybe.map (\f -> ( positionToCapture.figure, f ))
 
                         updatedPlayer1 : List Types.FigureState
                         updatedPlayer1 =
                             model.player1
                                 |> List.filter
                                     (\( pt, { figure, moves } ) ->
-                                        moves
-                                            |> List.head
-                                            |> Maybe.map
-                                                (\field ->
-                                                    not <| Util.isEqualPosition field.x positionToCapture.x field.y positionToCapture.y
-                                                )
-                                            |> Maybe.withDefault False
+                                        case ( positionToCaptureFound, moves |> List.head ) of
+                                            ( Just ( _, captureField ), Just field ) ->
+                                                not <| Util.isEqualPosition field.x captureField.x field.y captureField.y
+
+                                            _ ->
+                                                True
                                     )
 
                         updatedPlayer2 : List Types.FigureState
@@ -382,19 +377,19 @@ update msg model =
                             model.player2
                                 |> List.map
                                     (\( pt, { figure, moves } ) ->
-                                        case List.head moves of
-                                            Just currentPositon ->
+                                        case ( List.head moves, positionToCaptureFound ) of
+                                            ( Just currentPositon, Just ( _, positionToCaptureFound_ ) ) ->
                                                 if Util.isEqualPosition currentPositon.x attackerCurrentField.x currentPositon.y attackerCurrentField.y then
                                                     ( pt
                                                     , { figure = figure
-                                                      , moves = { x = positionToCapture.x, y = positionToCapture.y } :: moves
+                                                      , moves = { x = positionToCaptureFound_.x, y = positionToCaptureFound_.y } :: moves
                                                       }
                                                     )
 
                                                 else
                                                     ( pt, { figure = figure, moves = moves } )
 
-                                            Nothing ->
+                                            _ ->
                                                 ( pt, { figure = figure, moves = moves } )
                                     )
                     in
@@ -403,15 +398,14 @@ update msg model =
                         , player1 = updatedPlayer1
                         , player2 = updatedPlayer2
                         , player2Captures =
-                            case capturePosition of
+                            case positionToCaptureFound of
                                 Just captureFigureState ->
-                                    (captureFigureState |> Tuple.second) :: model.player2Captures
+                                    captureFigureState :: model.player2Captures
 
                                 Nothing ->
                                     model.player2Captures
                       }
-                    , [ OutMsg.SendPositionsUpdate model.roomId model.isInvited ( updatedPlayer1, updatedPlayer2 )
-                      ]
+                    , [ OutMsg.SendPositionsUpdate model.roomId model.isInvited ( updatedPlayer1, updatedPlayer2 ) ]
                     , Cmd.none
                     )
 
@@ -452,16 +446,16 @@ isMyFigure x y lst =
         |> Maybe.Extra.isJust
 
 
-viewSquare : Model -> Bool -> Int -> Int -> Html Msg
-viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yIndex =
+viewFields : Model -> Bool -> Int -> Int -> Html Msg
+viewFields model shouldShowLetter xIndex yIndex =
     let
         letter : String
         letter =
-            Util.indexToLetter xIndex
+            Util.indexToLetter model.isInvited xIndex
 
         maybeFigure : Maybe Types.Figure
         maybeFigure =
-            coordinatesToFigure xIndex yIndex (List.concat [ player1, player2 ])
+            coordinatesToFigure xIndex yIndex (List.concat [ model.player1, model.player2 ])
 
         figureEl : Html Msg
         figureEl =
@@ -469,7 +463,7 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
 
         isPotenitalMove : Bool
         isPotenitalMove =
-            case possibleNextMoves of
+            case model.possibleNextMoves of
                 Types.NextMove _ nextMoves ->
                     nextMoves.potentialMoves
                         |> List.filter (\{ x, y } -> Util.isEqualPosition xIndex x yIndex y)
@@ -481,11 +475,11 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
 
         isMyFigure_ : Bool
         isMyFigure_ =
-            isMyFigure xIndex yIndex player2
+            isMyFigure xIndex yIndex model.player2
 
         isPotenitalCapture : Bool
         isPotenitalCapture =
-            case possibleNextMoves of
+            case model.possibleNextMoves of
                 Types.NextMove _ nextMoves ->
                     nextMoves.potentialCaptures
                         |> List.Extra.find
@@ -522,7 +516,7 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
                     else
                         ""
                    )
-                ++ (case getPossitionOfActiveFigure possibleNextMoves of
+                ++ (case getPossitionOfActiveFigure model.possibleNextMoves of
                         Just { x, y } ->
                             if Util.isEqualPosition x xIndex y yIndex then
                                 " border-2 border-pink-400"
@@ -549,13 +543,22 @@ viewSquare { player1, player2, possibleNextMoves } shouldShowLetter xIndex yInde
 
 viewRows : Model -> Int -> Html Msg
 viewRows model colNum =
+    let
+        shouldShowLetter : Bool
+        shouldShowLetter =
+            if model.isInvited then
+                colNum == number_of_columns
+
+            else
+                colNum == 1
+    in
     Html.div
         [ HA.class "flex flex-row" ]
         (List.append
-            (List.repeat number_of_rows (viewSquare model)
+            (List.repeat number_of_rows (viewFields model)
                 |> List.indexedMap
                     (\i el ->
-                        el (colNum == number_of_columns) (i + 1) colNum
+                        el shouldShowLetter (i + 1) colNum
                     )
             )
             [ Html.div
@@ -570,7 +573,14 @@ viewColumns model =
     Html.div
         [ HA.class "flex flex-col border border-white" ]
         (List.repeat number_of_columns (viewRows model)
-            |> List.indexedMap (\i el -> el (i + 1))
+            |> List.indexedMap
+                (\i el ->
+                    if model.isInvited then
+                        el (i + 1)
+
+                    else
+                        el (8 - i)
+                )
         )
 
 
@@ -640,18 +650,13 @@ capturesView model =
         [ Html.ul
             []
             (List.map
-                (\{ figure, moves } ->
+                (\( figure, lastHeldField ) ->
                     -- TODO make player2Captures to have only figure and field that figure had when it was capture
                     Html.li
                         []
                         [ figureToHtml (Just figure)
                         , Html.p []
-                            [ moves
-                                |> List.head
-                                |> Maybe.andThen
-                                    (\lastHeldField ->
-                                        Util.fieldToSpot lastHeldField
-                                    )
+                            [ Util.fieldToSpot model.isInvited lastHeldField
                                 |> Maybe.withDefault ""
                                 |> Html.text
                             ]

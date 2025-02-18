@@ -42,36 +42,63 @@ getBaseUrl u =
                 ++ "/"
 
 
-indexToLetter : Int -> String
-indexToLetter idx =
-    case idx of
-        1 ->
-            "A"
+indexToLetter : Bool -> Int -> String
+indexToLetter isInvited idx =
+    if isInvited then
+        case idx of
+            1 ->
+                "H"
 
-        2 ->
-            "B"
+            2 ->
+                "G"
 
-        3 ->
-            "C"
+            3 ->
+                "F"
 
-        4 ->
-            "D"
+            4 ->
+                "E"
 
-        5 ->
-            "E"
+            5 ->
+                "D"
 
-        6 ->
-            "F"
+            6 ->
+                "C"
 
-        7 ->
-            "G"
+            7 ->
+                "B"
 
-        _ ->
-            "H"
+            _ ->
+                "A"
+
+    else
+        case idx of
+            1 ->
+                "A"
+
+            2 ->
+                "B"
+
+            3 ->
+                "C"
+
+            4 ->
+                "D"
+
+            5 ->
+                "E"
+
+            6 ->
+                "F"
+
+            7 ->
+                "G"
+
+            _ ->
+                "H"
 
 
-fieldToSpot : Types.Field -> Maybe String
-fieldToSpot { x, y } =
+fieldToSpot : Bool -> Types.Field -> Maybe String
+fieldToSpot isInvited { x, y } =
     let
         rowList : List Int
         rowList =
@@ -82,7 +109,7 @@ fieldToSpot { x, y } =
             rowList
                 |> List.concatMap
                     (\col ->
-                        List.map (\row -> ( ( row, col ), indexToLetter row ++ String.fromInt col )) rowList
+                        List.map (\row -> ( ( row, col ), indexToLetter isInvited row ++ String.fromInt col )) rowList
                     )
                 |> Dict.fromList
     in

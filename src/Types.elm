@@ -81,8 +81,8 @@ type alias ChessModel =
     , possibleNextMoves : PossibleNextMove
     , isInvited : Bool
     , error : Maybe String
-    , player1Captures : List FigureMoves
-    , player2Captures : List FigureMoves
+    , player1Captures : List ( Figure, Field )
+    , player2Captures : List ( Figure, Field )
     , urlString : String
     , roomId : String
     }
