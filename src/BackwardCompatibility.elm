@@ -129,7 +129,7 @@ view model =
                     let
                         queenTestUnitLst =
                             [ { startPosition = { x = 5, y = 5 }
-                              , maybeSpot = Util.fieldToSpot False { x = 5, y = 5 }
+                              , spot = Util.fieldToSpot False { x = 5, y = 5 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Queen
@@ -141,7 +141,7 @@ view model =
                               , myPossitions = Helper.queenPossitionsTest1
                               }
                             , { startPosition = { x = 2, y = 8 }
-                              , maybeSpot = Util.fieldToSpot False { x = 2, y = 8 }
+                              , spot = Util.fieldToSpot False { x = 2, y = 8 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Queen
@@ -153,7 +153,7 @@ view model =
                               , myPossitions = Helper.queenPossitionsTest2
                               }
                             , { startPosition = { x = 7, y = 3 }
-                              , maybeSpot = Util.fieldToSpot False { x = 7, y = 3 }
+                              , spot = Util.fieldToSpot False { x = 7, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Queen
@@ -180,7 +180,7 @@ view model =
                     let
                         kingTestUnitLst =
                             [ { startPosition = { x = 5, y = 6 }
-                              , maybeSpot = Util.fieldToSpot False { x = 5, y = 6 }
+                              , spot = Util.fieldToSpot False { x = 5, y = 6 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.King
@@ -192,7 +192,7 @@ view model =
                               , myPossitions = Helper.kingPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 3 }
-                              , maybeSpot = Util.fieldToSpot False { x = 6, y = 3 }
+                              , spot = Util.fieldToSpot False { x = 6, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.King
@@ -204,7 +204,7 @@ view model =
                               , myPossitions = Helper.kingPossitionsTest2
                               }
                             , { startPosition = { x = 1, y = 3 }
-                              , maybeSpot = Util.fieldToSpot False { x = 1, y = 3 }
+                              , spot = Util.fieldToSpot False { x = 1, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.King
@@ -231,7 +231,7 @@ view model =
                     let
                         rookTestUnitLst =
                             [ { startPosition = { x = 4, y = 7 }
-                              , maybeSpot = Util.fieldToSpot False { x = 4, y = 7 }
+                              , spot = Util.fieldToSpot False { x = 4, y = 7 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Rook
@@ -243,7 +243,7 @@ view model =
                               , myPossitions = Helper.rookPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 4 }
-                              , maybeSpot = Util.fieldToSpot False { x = 6, y = 4 }
+                              , spot = Util.fieldToSpot False { x = 6, y = 4 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Rook
@@ -255,7 +255,7 @@ view model =
                               , myPossitions = Helper.rookPossitionsTest2
                               }
                             , { startPosition = { x = 1, y = 8 }
-                              , maybeSpot = Util.fieldToSpot False { x = 1, y = 8 }
+                              , spot = Util.fieldToSpot False { x = 1, y = 8 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Rook
@@ -282,7 +282,7 @@ view model =
                     let
                         knightTestUnitLst =
                             [ { startPosition = { x = 6, y = 7 }
-                              , maybeSpot = Util.fieldToSpot False { x = 6, y = 7 }
+                              , spot = Util.fieldToSpot False { x = 6, y = 7 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Knight
@@ -294,7 +294,7 @@ view model =
                               , myPossitions = Helper.knightPossitionsTest1
                               }
                             , { startPosition = { x = 5, y = 4 }
-                              , maybeSpot = Util.fieldToSpot False { x = 5, y = 4 }
+                              , spot = Util.fieldToSpot False { x = 5, y = 4 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Knight
@@ -306,7 +306,7 @@ view model =
                               , myPossitions = Helper.knightPossitionsTest2
                               }
                             , { startPosition = { x = 3, y = 3 }
-                              , maybeSpot = Util.fieldToSpot False { x = 3, y = 3 }
+                              , spot = Util.fieldToSpot False { x = 3, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Knight
@@ -333,7 +333,7 @@ view model =
                     let
                         bishopTestUnitLst =
                             [ { startPosition = { x = 4, y = 5 }
-                              , maybeSpot = Util.fieldToSpot False { x = 4, y = 5 }
+                              , spot = Util.fieldToSpot False { x = 4, y = 5 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Bishop
@@ -345,7 +345,7 @@ view model =
                               , myPossitions = Helper.bishopPossitionsTest1
                               }
                             , { startPosition = { x = 6, y = 3 }
-                              , maybeSpot = Util.fieldToSpot False { x = 6, y = 3 }
+                              , spot = Util.fieldToSpot False { x = 6, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Bishop
@@ -357,7 +357,7 @@ view model =
                               , myPossitions = Helper.bishopPossitionsTest2
                               }
                             , { startPosition = { x = 2, y = 3 }
-                              , maybeSpot = Util.fieldToSpot False { x = 2, y = 3 }
+                              , spot = Util.fieldToSpot False { x = 2, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Bishop
@@ -384,7 +384,7 @@ view model =
                     let
                         pawnTestUnitLst =
                             [ { startPosition = { x = 7, y = 4 }
-                              , maybeSpot = Util.fieldToSpot False { x = 7, y = 4 }
+                              , spot = Util.fieldToSpot False { x = 7, y = 4 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Pawn
@@ -396,7 +396,7 @@ view model =
                               , myPossitions = Helper.pawnPossitionsTest1
                               }
                             , { startPosition = { x = 7, y = 3 }
-                              , maybeSpot = Util.fieldToSpot False { x = 7, y = 3 }
+                              , spot = Util.fieldToSpot False { x = 7, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Pawn
@@ -408,7 +408,7 @@ view model =
                               , myPossitions = Helper.pawnPossitionsTest2
                               }
                             , { startPosition = { x = 7, y = 2 }
-                              , maybeSpot = Util.fieldToSpot False { x = 7, y = 2 }
+                              , spot = Util.fieldToSpot False { x = 7, y = 2 }
                               , actual =
                                     Util.getNextPossibleMoves
                                         Types.Pawn
@@ -440,7 +440,7 @@ view model =
 
 
 testUnitView :
-    { maybeSpot : Maybe String
+    { spot : String
     , startPosition : Types.Field
     , expected : Types.NextMoves
     , actual : Types.NextMoves
@@ -448,17 +448,12 @@ testUnitView :
     , myPossitions : List Types.FigureState
     }
     -> Html Msg
-testUnitView { maybeSpot, startPosition, expected, actual, opponentPositions, myPossitions } =
+testUnitView { spot, startPosition, expected, actual, opponentPositions, myPossitions } =
     Html.li
         []
         [ Html.h3
             []
-            [ case maybeSpot of
-                Just spot ->
-                    Html.text <| "Movements and captures when on field " ++ spot
-
-                Nothing ->
-                    Html.text "There has been issue with provided field"
+            [ Html.text <| "Movements and captures when on field " ++ spot
             ]
         , Html.div
             []

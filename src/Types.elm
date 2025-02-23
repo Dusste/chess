@@ -12,7 +12,7 @@ type alias FrontendModel =
     { url : Url.Url
     , key : Nav.Key
     , page : Page
-    , game : Maybe ( List FigureState, List FigureState )
+    , game : Maybe GameFE
     , uuid : Maybe UUID.UUID
     }
 
@@ -120,13 +120,33 @@ type alias BackendModel =
     { -- game : Maybe ( List Chess.FigureState, List Chess.FigureState )
       players : Dict Lamdera.SessionId (List FigureState)
 
-    --   games is dict of Owner and maybe  invitee
-    , games :
-        Dict
-            String
-            { owner : ( Lamdera.SessionId, List FigureState )
-            , invitee : Maybe ( Lamdera.SessionId, List FigureState )
-            }
+    --   games is dict of Owner and maybe Invitee, comprises of sessionId, figures and captures
+    , games : Dict String Game
+    }
+
+
+type alias Game =
+    { owner : Player
+    , invitee : Maybe Player
+    }
+
+
+type alias GameFE =
+    { player1 : PlayerFe
+    , player2 : PlayerFe
+    }
+
+
+type alias PlayerFe =
+    { figures : List FigureState
+    , captures : List ( Figure, Field )
+    }
+
+
+type alias Player =
+    { playersSessionId : Lamdera.SessionId
+    , figures : List FigureState
+    , captures : List ( Figure, Field )
     }
 
 
@@ -137,7 +157,7 @@ type ToFrontend
 
 
 type BeToChess
-    = GameCurrentState ( List FigureState, List FigureState )
+    = GameCurrentState GameFE
     | ResponseError String
 
 
@@ -146,6 +166,7 @@ type ToBackend
     | InitiateGame String
     | JoinGame String
     | ChessOutMsg_toBackend_SendPositionsUpdate String Bool ( List FigureState, List FigureState )
+    | ChessOutMsg_toBackend_SendCaptureUpdate String Bool ( Figure, Field )
 
 
 type BackendMsg
@@ -172,4 +193,4 @@ type ChessMsg
         , y : Int
         }
     | CopyRoomUrl
-    | FeToChess_GotGameData ( List FigureState, List FigureState )
+    | FeToChess_GotGameData GameFE

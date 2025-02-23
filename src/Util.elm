@@ -97,24 +97,18 @@ indexToLetter isInvited idx =
                 "H"
 
 
-fieldToSpot : Bool -> Types.Field -> Maybe String
+fieldToSpot : Bool -> Types.Field -> String
 fieldToSpot isInvited { x, y } =
     let
-        rowList : List Int
-        rowList =
-            List.range 1 8
+        sideTableNum : String
+        sideTableNum =
+            if isInvited then
+                y |> String.fromInt
 
-        spotLst : Dict ( Int, Int ) String
-        spotLst =
-            rowList
-                |> List.concatMap
-                    (\col ->
-                        List.map (\row -> ( ( row, col ), indexToLetter isInvited row ++ String.fromInt col )) rowList
-                    )
-                |> Dict.fromList
+            else
+                (9 - y) |> String.fromInt
     in
-    spotLst
-        |> Dict.get ( x, y )
+    indexToLetter isInvited x ++ sideTableNum
 
 
 isOccupiedFieldsXY : Types.Field -> Int -> Int -> Bool

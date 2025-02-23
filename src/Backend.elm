@@ -80,8 +80,8 @@ update msg model =
                         |> Dict.filter
                             (\_ { owner, invitee } ->
                                 Maybe.map2
-                                    (\o i ->
-                                        Tuple.first o == sessionId || Tuple.first i == sessionId
+                                    (\ownerAsPlayer inviteeAsPlayer ->
+                                        ownerAsPlayer.playersSessionId == sessionId || inviteeAsPlayer.playersSessionId == sessionId
                                     )
                                     (Just owner)
                                     invitee
@@ -92,10 +92,10 @@ update msg model =
                             (\{ owner, invitee } ->
                                 case invitee of
                                     Just invitee_ ->
-                                        [ Tuple.first owner, Tuple.first invitee_ ]
+                                        [ owner.playersSessionId, invitee_.playersSessionId ]
 
                                     Nothing ->
-                                        [ Tuple.first owner ]
+                                        [ owner.playersSessionId ]
                             )
                         |> List.head
                         |> Maybe.withDefault []
@@ -119,11 +119,6 @@ update msg model =
                     Debug.log "User Connected" ( sessionId, clientId )
             in
             -- Game have owner of the game and invitee - First add owner of a game and starting figures
-            -- ( { model
-            --     | players = Dict.insert sessionId startPositionPlayer2 model.players
-            --   }
-            -- , Cmd.none
-            -- )
             ( model, Cmd.none )
 
         Types.NoOpBackendMsg ->
@@ -140,7 +135,11 @@ updateFromFrontend sessionId clientId msg model =
             ( { model
                 | games =
                     Dict.insert roomId
-                        { owner = ( sessionId, startPositionPlayer2 )
+                        { owner =
+                            { playersSessionId = sessionId
+                            , figures = startPositionPlayer2
+                            , captures = []
+                            }
                         , invitee = Nothing
                         }
                         model.games
@@ -161,7 +160,7 @@ updateFromFrontend sessionId clientId msg model =
                                         Err "JoinGame: Game has already started"
 
                                     Nothing ->
-                                        if sessionId == Tuple.first owner then
+                                        if sessionId == owner.playersSessionId then
                                             Err "JoinGame: You are trying to play game with yourself, that is not posible"
 
                                         else
@@ -172,15 +171,21 @@ updateFromFrontend sessionId clientId msg model =
                 updated : ( Model, Cmd Types.BackendMsg )
                 updated =
                     let
-                        updateGames :
-                            Dict
-                                String
-                                { owner : ( Lamdera.SessionId, List Types.FigureState )
-                                , invitee : Maybe ( Lamdera.SessionId, List Types.FigureState )
-                                }
+                        updateGames : Dict String Types.Game
                         updateGames =
                             Dict.update roomId
-                                (Maybe.map (\rec -> { rec | invitee = Just ( sessionId, startPositionPlayer1 ) }))
+                                (Maybe.map
+                                    (\rec ->
+                                        { rec
+                                            | invitee =
+                                                Just
+                                                    { playersSessionId = sessionId
+                                                    , figures = startPositionPlayer1
+                                                    , captures = []
+                                                    }
+                                        }
+                                    )
+                                )
                                 model.games
                     in
                     ( { model
@@ -201,24 +206,28 @@ updateFromFrontend sessionId clientId msg model =
                         |> List.map
                             (\{ owner, invitee } ->
                                 let
-                                    positionsForOwner =
-                                        ( Tuple.second invitee, Tuple.second owner )
+                                    gameFromOwnersPerspective =
+                                        { player1 = { figures = invitee.figures, captures = invitee.captures }
+                                        , player2 = { figures = owner.figures, captures = owner.captures }
+                                        }
 
                                     convertOpponentToMe =
                                         -- Opponent is looking in game from the first person
-                                        BackendUtil.convertRoles (Tuple.second invitee)
+                                        BackendUtil.convertRoles invitee.figures
 
                                     convertMeToOpponent =
                                         -- From Opponent's perspective - I am Opponent
-                                        BackendUtil.convertRoles (Tuple.second owner)
+                                        BackendUtil.convertRoles owner.figures
 
-                                    positionsForInvitee =
-                                        ( convertMeToOpponent, convertOpponentToMe )
+                                    gameFromInviteePerspective =
+                                        { player1 = { figures = convertMeToOpponent, captures = owner.captures }
+                                        , player2 = { figures = convertOpponentToMe, captures = invitee.captures }
+                                        }
                                 in
-                                [ Lamdera.sendToFrontend (Tuple.first owner)
-                                    (Types.BeToChess <| Types.GameCurrentState positionsForOwner)
-                                , Lamdera.sendToFrontend (Tuple.first invitee)
-                                    (Types.BeToChess <| Types.GameCurrentState positionsForInvitee)
+                                [ Lamdera.sendToFrontend owner.playersSessionId
+                                    (Types.BeToChess <| Types.GameCurrentState gameFromOwnersPerspective)
+                                , Lamdera.sendToFrontend invitee.playersSessionId
+                                    (Types.BeToChess <| Types.GameCurrentState gameFromInviteePerspective)
                                 ]
                             )
                         |> List.concat
@@ -237,24 +246,28 @@ updateFromFrontend sessionId clientId msg model =
 
         Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId isFromInviteePerspective ( pl1, pl2 ) ->
             let
-                updateGames :
-                    Dict
-                        String
-                        { owner : ( Lamdera.SessionId, List Types.FigureState )
-                        , invitee : Maybe ( Lamdera.SessionId, List Types.FigureState )
-                        }
+                updateGames : Dict String Types.Game
                 updateGames =
                     if isFromInviteePerspective then
                         Dict.update roomId
                             (Maybe.andThen
-                                (\rec ->
+                                (\{ owner, invitee } ->
                                     Maybe.map
                                         (\invitee_ ->
-                                            { invitee = Just ( Tuple.first invitee_, BackendUtil.convertRoles pl2 )
-                                            , owner = ( Tuple.first rec.owner, BackendUtil.convertRoles pl1 )
+                                            let
+                                                updateOwner =
+                                                    { owner | figures = BackendUtil.convertRoles pl1 }
+
+                                                updateInvitee =
+                                                    { invitee_
+                                                        | figures = BackendUtil.convertRoles pl2
+                                                    }
+                                            in
+                                            { invitee = Just updateInvitee
+                                            , owner = updateOwner
                                             }
                                         )
-                                        rec.invitee
+                                        invitee
                                 )
                             )
                             model.games
@@ -262,14 +275,23 @@ updateFromFrontend sessionId clientId msg model =
                     else
                         Dict.update roomId
                             (Maybe.andThen
-                                (\rec ->
+                                (\{ owner, invitee } ->
                                     Maybe.map
                                         (\invitee_ ->
-                                            { invitee = Just ( Tuple.first invitee_, pl1 )
-                                            , owner = ( Tuple.first rec.owner, pl2 )
+                                            let
+                                                updateOwner =
+                                                    { owner | figures = pl2 }
+
+                                                updateInvitee =
+                                                    { invitee_
+                                                        | figures = pl1
+                                                    }
+                                            in
+                                            { invitee = Just updateInvitee
+                                            , owner = updateOwner
                                             }
                                         )
-                                        rec.invitee
+                                        invitee
                                 )
                             )
                             model.games
@@ -291,24 +313,114 @@ updateFromFrontend sessionId clientId msg model =
                 |> List.map
                     (\{ owner, invitee } ->
                         let
-                            positionsForOwner =
-                                ( Tuple.second invitee, Tuple.second owner )
+                            gameFromOwnersPerspective =
+                                { player1 = { figures = invitee.figures, captures = invitee.captures }
+                                , player2 = { figures = owner.figures, captures = owner.captures }
+                                }
 
                             convertOpponentToMe =
                                 -- Opponent is looking in game from the first person
-                                BackendUtil.convertRoles (Tuple.second invitee)
+                                BackendUtil.convertRoles invitee.figures
 
                             convertMeToOpponent =
                                 -- From Opponent's perspective - I am Opponent
-                                BackendUtil.convertRoles (Tuple.second owner)
+                                BackendUtil.convertRoles owner.figures
 
-                            positionsForInvitee =
-                                ( convertMeToOpponent, convertOpponentToMe )
+                            gameFromInviteePerspective =
+                                { player1 = { figures = convertMeToOpponent, captures = owner.captures }
+                                , player2 = { figures = convertOpponentToMe, captures = invitee.captures }
+                                }
                         in
-                        [ Lamdera.sendToFrontend (Tuple.first owner)
-                            (Types.BeToChess <| Types.GameCurrentState positionsForOwner)
-                        , Lamdera.sendToFrontend (Tuple.first invitee)
-                            (Types.BeToChess <| Types.GameCurrentState positionsForInvitee)
+                        [ Lamdera.sendToFrontend owner.playersSessionId
+                            (Types.BeToChess <| Types.GameCurrentState gameFromOwnersPerspective)
+                        , Lamdera.sendToFrontend invitee.playersSessionId
+                            (Types.BeToChess <| Types.GameCurrentState gameFromInviteePerspective)
+                        ]
+                    )
+                |> List.concat
+                |> Cmd.batch
+            )
+
+        Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId isFromInviteePerspective capture ->
+            let
+                updateGames : Dict String Types.Game
+                updateGames =
+                    Dict.update roomId
+                        (Maybe.andThen
+                            (\rec ->
+                                Maybe.map
+                                    (\invitee_ ->
+                                        if isFromInviteePerspective then
+                                            let
+                                                updateInvitee =
+                                                    { invitee_
+                                                        | captures = capture :: invitee_.captures
+                                                    }
+                                            in
+                                            { rec
+                                                | invitee = Just updateInvitee
+                                            }
+
+                                        else
+                                            let
+                                                owner_ =
+                                                    rec.owner
+
+                                                updateOwner =
+                                                    { owner_ | captures = capture :: owner_.captures }
+                                            in
+                                            { rec
+                                                | owner = updateOwner
+                                            }
+                                    )
+                                    rec.invitee
+                            )
+                        )
+                        model.games
+            in
+            ( { model
+                | games = updateGames
+              }
+            , updateGames
+                |> Dict.foldl
+                    (\_ { owner, invitee } _ ->
+                        case invitee of
+                            Just invitee_ ->
+                                [ { owner = owner, invitee = invitee_ } ]
+
+                            Nothing ->
+                                []
+                    )
+                    []
+                |> List.map
+                    (\{ owner, invitee } ->
+                        let
+                            gameFromOwnersPerspective =
+                                { player1 = { figures = invitee.figures, captures = invitee.captures }
+                                , player2 = { figures = owner.figures, captures = owner.captures }
+                                }
+
+                            convertOpponentToMe =
+                                -- Opponent is looking in game from the first person
+                                BackendUtil.convertRoles invitee.figures
+
+                            convertMeToOpponent =
+                                -- From Opponent's perspective - I am Opponent
+                                BackendUtil.convertRoles owner.figures
+
+                            gameFromInviteePerspective =
+                                { player2 = { figures = convertOpponentToMe, captures = invitee.captures }
+                                , player1 = { figures = convertMeToOpponent, captures = owner.captures }
+                                }
+                        in
+                        [ Lamdera.sendToFrontend owner.playersSessionId
+                            (Types.BeToChess <|
+                                Types.GameCurrentState gameFromOwnersPerspective
+                            )
+                        , Lamdera.sendToFrontend invitee.playersSessionId
+                            (Types.BeToChess <|
+                                Types.GameCurrentState gameFromInviteePerspective
+                            )
                         ]
                     )
                 |> List.concat

@@ -349,7 +349,7 @@ update msg model =
             case model.possibleNextMoves of
                 Types.NextMove attackerCurrentField { potentialCaptures } ->
                     let
-                        positionToCaptureFound : Maybe ( Types.Figure, { x : Int, y : Int } )
+                        positionToCaptureFound : Maybe ( Types.Figure, Types.Field )
                         positionToCaptureFound =
                             -- Try to find desired field within potential captures fields
                             potentialCaptures
@@ -405,7 +405,16 @@ update msg model =
                                 Nothing ->
                                     model.player2Captures
                       }
-                    , [ OutMsg.SendPositionsUpdate model.roomId model.isInvited ( updatedPlayer1, updatedPlayer2 ) ]
+                    , [ case positionToCaptureFound of
+                            Just capture_ ->
+                                [ OutMsg.SendCaptureUpdate model.roomId model.isInvited capture_
+                                , OutMsg.SendPositionsUpdate model.roomId model.isInvited ( updatedPlayer1, updatedPlayer2 )
+                                ]
+
+                            Nothing ->
+                                []
+                      ]
+                        |> List.concat
                     , Cmd.none
                     )
 
@@ -415,8 +424,13 @@ update msg model =
                     , Cmd.none
                     )
 
-        Types.FeToChess_GotGameData ( pl1, pl2 ) ->
-            ( { model | player1 = pl1, player2 = pl2 }
+        Types.FeToChess_GotGameData { player1, player2 } ->
+            ( { model
+                | player1 = player1.figures
+                , player2 = player2.figures
+                , player1Captures = player1.captures
+                , player2Captures = player2.captures
+              }
             , []
             , Cmd.none
             )
@@ -446,8 +460,8 @@ isMyFigure x y lst =
         |> Maybe.Extra.isJust
 
 
-viewFields : Model -> Bool -> Int -> Int -> Html Msg
-viewFields model shouldShowLetter xIndex yIndex =
+viewField : Model -> Int -> Int -> Html Msg
+viewField model xIndex yIndex =
     let
         letter : String
         letter =
@@ -531,7 +545,7 @@ viewFields model shouldShowLetter xIndex yIndex =
         [ Html.div
             []
             [ figureEl ]
-        , if shouldShowLetter then
+        , if yIndex == 8 then
             Html.div
                 [ HA.class "absolute bottom-[-30px] left-[45%]" ]
                 [ Html.text letter ]
@@ -544,26 +558,26 @@ viewFields model shouldShowLetter xIndex yIndex =
 viewRows : Model -> Int -> Html Msg
 viewRows model colNum =
     let
-        shouldShowLetter : Bool
-        shouldShowLetter =
+        sideTableNum : Int
+        sideTableNum =
             if model.isInvited then
-                colNum == number_of_columns
+                colNum
 
             else
-                colNum == 1
+                9 - colNum
     in
     Html.div
         [ HA.class "flex flex-row" ]
         (List.append
-            (List.repeat number_of_rows (viewFields model)
+            (List.repeat number_of_rows (viewField model)
                 |> List.indexedMap
                     (\i el ->
-                        el shouldShowLetter (i + 1) colNum
+                        el (i + 1) colNum
                     )
             )
             [ Html.div
                 [ HA.class "flex self-center" ]
-                [ Html.text <| String.fromInt colNum ]
+                [ Html.text <| String.fromInt sideTableNum ]
             ]
         )
 
@@ -574,13 +588,7 @@ viewColumns model =
         [ HA.class "flex flex-col border border-white" ]
         (List.repeat number_of_columns (viewRows model)
             |> List.indexedMap
-                (\i el ->
-                    if model.isInvited then
-                        el (i + 1)
-
-                    else
-                        el (8 - i)
-                )
+                (\i el -> el (i + 1))
         )
 
 
@@ -639,29 +647,115 @@ view model =
             (Html.div [ HA.class "flex justify-center" ]
                 [ viewColumns model ]
             )
-        , capturesView model
+        , Html.Extra.viewIf
+            ([ model.player1Captures, model.player2Captures ]
+                |> List.concat
+                |> List.isEmpty
+                |> not
+            )
+            (capturesView model)
         ]
 
 
 capturesView : Model -> Html Msg
 capturesView model =
+    {-
+       TODO logic is too complex and its hard to follow who is who:
+       make improvement in the future
+    -}
     Html.div
         []
-        [ Html.ul
-            []
-            (List.map
-                (\( figure, lastHeldField ) ->
-                    -- TODO make player2Captures to have only figure and field that figure had when it was capture
-                    Html.li
+        [ if model.isInvited then
+            Html.div
+                [ HA.class "flex gap-2" ]
+                [ Html.div
+                    [ HA.class "border border-white p-2" ]
+                    [ Html.h3
                         []
-                        [ figureToHtml (Just figure)
-                        , Html.p []
-                            [ Util.fieldToSpot model.isInvited lastHeldField
-                                |> Maybe.withDefault ""
-                                |> Html.text
-                            ]
-                        ]
-                )
-                model.player2Captures
-            )
+                        [ Html.text "White" ]
+                    , Html.ul
+                        []
+                        (List.map
+                            (\( figure, lastHeldField ) ->
+                                Html.li
+                                    []
+                                    [ figureToHtml (Just figure)
+                                    , Html.p []
+                                        [ Util.fieldToSpot False lastHeldField
+                                            |> Html.text
+                                        ]
+                                    ]
+                            )
+                            model.player1Captures
+                        )
+                    ]
+                , Html.div
+                    [ HA.class "border border-white p-2]" ]
+                    [ Html.h3
+                        []
+                        [ Html.text "Black" ]
+                    , Html.ul
+                        []
+                        (List.map
+                            (\( figure, lastHeldField ) ->
+                                Html.li
+                                    []
+                                    [ figureToHtml (Just figure)
+                                    , Html.p []
+                                        [ Util.fieldToSpot model.isInvited lastHeldField
+                                            |> Html.text
+                                        ]
+                                    ]
+                            )
+                            model.player2Captures
+                        )
+                    ]
+                ]
+
+          else
+            Html.div
+                [ HA.class "flex gap-2" ]
+                [ Html.div
+                    [ HA.class "border border-white p-2" ]
+                    [ Html.h3
+                        []
+                        [ Html.text "White" ]
+                    , Html.ul
+                        []
+                        (List.map
+                            (\( figure, lastHeldField ) ->
+                                Html.li
+                                    []
+                                    [ figureToHtml (Just figure)
+                                    , Html.p []
+                                        [ Util.fieldToSpot model.isInvited lastHeldField
+                                            |> Html.text
+                                        ]
+                                    ]
+                            )
+                            model.player2Captures
+                        )
+                    ]
+                , Html.div
+                    [ HA.class "border border-white p-2]" ]
+                    [ Html.h3
+                        []
+                        [ Html.text "Black" ]
+                    , Html.ul
+                        []
+                        (List.map
+                            (\( figure, lastHeldField ) ->
+                                Html.li
+                                    []
+                                    [ figureToHtml (Just figure)
+                                    , Html.p []
+                                        [ Util.fieldToSpot True lastHeldField
+                                            |> Html.text
+                                        ]
+                                    ]
+                            )
+                            model.player1Captures
+                        )
+                    ]
+                ]
         ]

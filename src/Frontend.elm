@@ -220,9 +220,6 @@ update msg model =
 
         Types.GotTimestamp timestamp ->
             let
-                _ =
-                    Debug.log "Current URL:" model.url
-
                 maybeRoomIdInvite : Maybe ( String, Bool )
                 maybeRoomIdInvite =
                     -- We need to extract info if user was invited so we can dispatch BE msgs
@@ -276,7 +273,7 @@ updateFromBackend msg model =
                             case model.page of
                                 Types.ChessPage mainModel ->
                                     let
-                                        ( model_, outMsg, cmds_ ) =
+                                        ( model_, _, cmds_ ) =
                                             Chess.update (Types.FeToChess_GotGameData game) mainModel
                                     in
                                     ( Types.ChessPage model_
