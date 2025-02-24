@@ -98,14 +98,6 @@ urlToPage url uuid key =
 initCurrentPage : Model -> ( Model, Cmd Types.FrontendMsg )
 initCurrentPage model =
     case model.page of
-        -- Types.ChessPage _ ->
-        --     let
-        --         ( model_, cmds ) =
-        --             Chess.init (Util.getBaseUrl model.url)
-        --     in
-        --     ( { model | page = Types.ChessPage model_ }
-        --     , Cmd.map Types.GotChessPageMsg cmds
-        --     )
         Types.HomePage _ ->
             case model.uuid of
                 Just uuid_ ->
