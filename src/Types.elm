@@ -29,6 +29,12 @@ type alias Move =
     }
 
 
+type WhoseMove
+    = GameIdle
+      -- | StartGame
+    | PlayersMove FigureColor
+
+
 type alias Position =
     { figure : Maybe Figure
     , x : Int
@@ -58,7 +64,9 @@ type alias Field =
     }
 
 
-type PlayerType
+type
+    PlayerType
+    -- `ME` is however initiated the game
     = Opponent
     | Me
 
@@ -67,6 +75,11 @@ type alias FigureMoves =
     { figure : Figure
     , moves : List Field
     }
+
+
+type FigureColor
+    = White
+    | Black
 
 
 type alias NextMoves =
@@ -79,12 +92,13 @@ type alias ChessModel =
     { player1 : List FigureState
     , player2 : List FigureState
     , possibleNextMoves : PossibleNextMove
-    , isInvited : Bool
+    , figureColor : FigureColor
     , error : Maybe String
     , player1Captures : List ( Figure, Field )
     , player2Captures : List ( Figure, Field )
     , urlString : String
     , roomId : String
+    , whoseMove : WhoseMove
     }
 
 
@@ -157,7 +171,7 @@ type ToFrontend
 
 
 type BeToChess
-    = GameCurrentState GameFE
+    = GameCurrentState GameFE WhoseMove
     | ResponseError String
 
 
@@ -165,8 +179,8 @@ type ToBackend
     = NoOpToBackend
     | InitiateGame String
     | JoinGame String
-    | ChessOutMsg_toBackend_SendPositionsUpdate String Bool ( List FigureState, List FigureState )
-    | ChessOutMsg_toBackend_SendCaptureUpdate String Bool ( Figure, Field )
+    | ChessOutMsg_toBackend_SendPositionsUpdate String FigureColor ( List FigureState, List FigureState )
+    | ChessOutMsg_toBackend_SendCaptureUpdate String FigureColor ( Figure, Field )
 
 
 type BackendMsg
@@ -193,4 +207,4 @@ type ChessMsg
         , y : Int
         }
     | CopyRoomUrl
-    | FeToChess_GotGameData GameFE
+    | FeToChess_GotGameData GameFE WhoseMove

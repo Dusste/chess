@@ -155,15 +155,15 @@ type alias Model =
     Types.ChessModel
 
 
-init : String -> String -> Bool -> ( Model, Cmd Msg )
-init roomId urlString isInvited =
-    ( initialModel urlString isInvited roomId
+init : String -> String -> Types.FigureColor -> ( Model, Cmd Msg )
+init roomId urlString figureColor =
+    ( initialModel urlString figureColor roomId
     , Cmd.none
     )
 
 
-initialModel : String -> Bool -> String -> Model
-initialModel urlString isInvited roomId =
+initialModel : String -> Types.FigureColor -> String -> Model
+initialModel urlString figureColor roomId =
     { player1 = []
     , player2 = []
     , possibleNextMoves = Types.Idle
@@ -171,8 +171,9 @@ initialModel urlString isInvited roomId =
     , player1Captures = [] -- TODO Need to send captures from BE for opponent
     , player2Captures = []
     , urlString = urlString
-    , isInvited = isInvited
+    , figureColor = figureColor
     , roomId = roomId
+    , whoseMove = Types.GameIdle
     }
 
 
@@ -322,7 +323,7 @@ update msg model =
                                             | player2 = updatePlayer2
                                             , possibleNextMoves = Types.Idle
                                           }
-                                        , [ OutMsg.SendPositionsUpdate model.roomId model.isInvited ( model.player1, updatePlayer2 )
+                                        , [ OutMsg.SendPositionsUpdate model.roomId model.figureColor ( model.player1, updatePlayer2 )
                                           ]
                                         , Cmd.none
                                         )
@@ -407,8 +408,8 @@ update msg model =
                       }
                     , [ case positionToCaptureFound of
                             Just capture_ ->
-                                [ OutMsg.SendCaptureUpdate model.roomId model.isInvited capture_
-                                , OutMsg.SendPositionsUpdate model.roomId model.isInvited ( updatedPlayer1, updatedPlayer2 )
+                                [ OutMsg.SendCaptureUpdate model.roomId model.figureColor capture_
+                                , OutMsg.SendPositionsUpdate model.roomId model.figureColor ( updatedPlayer1, updatedPlayer2 )
                                 ]
 
                             Nothing ->
@@ -424,12 +425,13 @@ update msg model =
                     , Cmd.none
                     )
 
-        Types.FeToChess_GotGameData { player1, player2 } ->
+        Types.FeToChess_GotGameData { player1, player2 } whoseMove ->
             ( { model
                 | player1 = player1.figures
                 , player2 = player2.figures
                 , player1Captures = player1.captures
                 , player2Captures = player2.captures
+                , whoseMove = whoseMove
               }
             , []
             , Cmd.none
@@ -465,7 +467,7 @@ viewField model xIndex yIndex =
     let
         letter : String
         letter =
-            Util.indexToLetter model.isInvited xIndex
+            Util.indexToLetter model.figureColor xIndex
 
         maybeFigure : Maybe Types.Figure
         maybeFigure =
@@ -509,16 +511,44 @@ viewField model xIndex yIndex =
     in
     Html.div
         [ HE.onClick <|
-            if isMyFigure_ || maybeFigure == Nothing then
-                Types.InitiateMove position
+            -- TODO make it smarter
+            case model.whoseMove of
+                Types.PlayersMove figureColor ->
+                    case figureColor of
+                        Types.White ->
+                            if model.figureColor == Types.White then
+                                if isMyFigure_ || maybeFigure == Nothing then
+                                    Types.InitiateMove position
 
-            else
-                case maybeFigure of
-                    Just fg ->
-                        Types.InitiateCapture { figure = fg, x = position.x, y = position.y }
+                                else
+                                    case maybeFigure of
+                                        Just fg ->
+                                            Types.InitiateCapture { figure = fg, x = position.x, y = position.y }
 
-                    Nothing ->
-                        Types.NoOp
+                                        Nothing ->
+                                            Types.NoOp
+
+                            else
+                                Types.NoOp
+
+                        Types.Black ->
+                            if model.figureColor == Types.Black then
+                                if isMyFigure_ || maybeFigure == Nothing then
+                                    Types.InitiateMove position
+
+                                else
+                                    case maybeFigure of
+                                        Just fg ->
+                                            Types.InitiateCapture { figure = fg, x = position.x, y = position.y }
+
+                                        Nothing ->
+                                            Types.NoOp
+
+                            else
+                                Types.NoOp
+
+                Types.GameIdle ->
+                    Types.NoOp
         , HA.class <|
             "relative cursor-pointer flex w-[100px] h-[100px]"
                 ++ (if isPotenitalMove then
@@ -560,11 +590,12 @@ viewRows model colNum =
     let
         sideTableNum : Int
         sideTableNum =
-            if model.isInvited then
-                colNum
+            case model.figureColor of
+                Types.Black ->
+                    colNum
 
-            else
-                9 - colNum
+                Types.White ->
+                    9 - colNum
     in
     Html.div
         [ HA.class "flex flex-row" ]
@@ -596,45 +627,79 @@ view : Model -> Html Msg
 view model =
     Html.div
         [ HA.class "" ]
-        [ if model.isInvited then
-            Html.div
-                [ HA.class "flex flex-col mb-4" ]
-                [ Html.h1
-                    [ HA.class "text-4xl m-10 text-center" ]
-                    [ Html.text "Welcome to game"
-                    ]
-                , Html.p
-                    [ HA.class "text-center" ]
-                    [ Html.text "Thanks for accepting invitation" ]
-                ]
+        [ case model.figureColor of
+            Types.Black ->
+                Html.div
+                    [ HA.class "flex flex-col mb-4" ]
+                    [ Html.h1
+                        [ HA.class "text-4xl m-10 text-center" ]
+                        [ Html.text "Welcome to game"
+                        ]
+                    , case model.whoseMove of
+                        Types.GameIdle ->
+                            Html.text ""
 
-          else
-            Html.div
-                [ HA.class "flex flex-col mb-4" ]
-                [ Html.h1
-                    [ HA.class "text-4xl m-10 text-center" ]
-                    [ Html.text "You are about to start a game with friend"
+                        -- Types.StartGame ->
+                        --     Html.p
+                        --         [ HA.class "text-center" ]
+                        --         [ Html.text "Thanks for accepting invitation ! Its White's move" ]
+                        Types.PlayersMove figureColor ->
+                            case figureColor of
+                                Types.Black ->
+                                    Html.p
+                                        [ HA.class "text-center" ]
+                                        [ Html.text "Black's move" ]
+
+                                Types.White ->
+                                    Html.p
+                                        [ HA.class "text-center" ]
+                                        [ Html.text "White's move" ]
                     ]
-                , Html.p
-                    [ HA.class "text-center" ]
-                    [ Html.text "Send invite to your friend" ]
-                , Html.div
-                    [ HA.class "flex self-center" ]
-                    [ Components.InputField.view
-                        |> Components.InputField.withValue (model.urlString ++ "?invite=true")
-                        |> Components.InputField.withReadOnly
-                        |> Components.InputField.withDisable False
-                        |> Components.InputField.withError []
-                        |> Components.InputField.withExtraText (Components.InputField.Placeholder "Email")
-                        |> Components.InputField.toHtml
-                    , Components.Button.view
-                        |> Components.Button.withText "Copy"
-                        |> Components.Button.withMsg Types.CopyRoomUrl
-                        |> Components.Button.withDisabled False
-                        |> Components.Button.withPrimaryStyle
-                        |> Components.Button.toHtml
+
+            Types.White ->
+                Html.div
+                    [ HA.class "flex flex-col mb-4" ]
+                    [ Html.h1
+                        [ HA.class "text-4xl m-10 text-center" ]
+                        [ Html.text <|
+                            case model.whoseMove of
+                                Types.GameIdle ->
+                                    "You are about to start a game with friend"
+
+                                -- Types.StartGame ->
+                                --     "Let the game begin ! White's move"
+                                Types.PlayersMove figureColor ->
+                                    case figureColor of
+                                        Types.Black ->
+                                            "Black's move"
+
+                                        Types.White ->
+                                            "White's move"
+                        ]
+                    , Html.Extra.viewIf (model.whoseMove == Types.GameIdle)
+                        (Html.div [ HA.class "flex flex-col" ]
+                            [ Html.p
+                                [ HA.class "text-center" ]
+                                [ Html.text "Send invite to your friend" ]
+                            , Html.div
+                                [ HA.class "flex self-center" ]
+                                [ Components.InputField.view
+                                    |> Components.InputField.withValue (model.urlString ++ "?invite=true")
+                                    |> Components.InputField.withReadOnly
+                                    |> Components.InputField.withDisable False
+                                    |> Components.InputField.withError []
+                                    |> Components.InputField.withExtraText (Components.InputField.Placeholder "Email")
+                                    |> Components.InputField.toHtml
+                                , Components.Button.view
+                                    |> Components.Button.withText "Copy"
+                                    |> Components.Button.withMsg Types.CopyRoomUrl
+                                    |> Components.Button.withDisabled False
+                                    |> Components.Button.withPrimaryStyle
+                                    |> Components.Button.toHtml
+                                ]
+                            ]
+                        )
                     ]
-                ]
         , case model.error of
             Just err ->
                 Html.p
@@ -665,97 +730,98 @@ capturesView model =
     -}
     Html.div
         []
-        [ if model.isInvited then
-            Html.div
-                [ HA.class "flex gap-2" ]
-                [ Html.div
-                    [ HA.class "border border-white p-2" ]
-                    [ Html.h3
-                        []
-                        [ Html.text "White" ]
-                    , Html.ul
-                        []
-                        (List.map
-                            (\( figure, lastHeldField ) ->
-                                Html.li
-                                    []
-                                    [ figureToHtml (Just figure)
-                                    , Html.p []
-                                        [ Util.fieldToSpot False lastHeldField
-                                            |> Html.text
+        [ case model.figureColor of
+            Types.Black ->
+                Html.div
+                    [ HA.class "flex gap-2" ]
+                    [ Html.div
+                        [ HA.class "border border-white p-2" ]
+                        [ Html.h3
+                            []
+                            [ Html.text "White" ]
+                        , Html.ul
+                            []
+                            (List.map
+                                (\( figure, lastHeldField ) ->
+                                    Html.li
+                                        []
+                                        [ figureToHtml (Just figure)
+                                        , Html.p []
+                                            [ Util.fieldToSpot Types.White lastHeldField
+                                                |> Html.text
+                                            ]
                                         ]
-                                    ]
+                                )
+                                model.player1Captures
                             )
-                            model.player1Captures
-                        )
-                    ]
-                , Html.div
-                    [ HA.class "border border-white p-2]" ]
-                    [ Html.h3
-                        []
-                        [ Html.text "Black" ]
-                    , Html.ul
-                        []
-                        (List.map
-                            (\( figure, lastHeldField ) ->
-                                Html.li
-                                    []
-                                    [ figureToHtml (Just figure)
-                                    , Html.p []
-                                        [ Util.fieldToSpot model.isInvited lastHeldField
-                                            |> Html.text
+                        ]
+                    , Html.div
+                        [ HA.class "border border-white p-2]" ]
+                        [ Html.h3
+                            []
+                            [ Html.text "Black" ]
+                        , Html.ul
+                            []
+                            (List.map
+                                (\( figure, lastHeldField ) ->
+                                    Html.li
+                                        []
+                                        [ figureToHtml (Just figure)
+                                        , Html.p []
+                                            [ Util.fieldToSpot model.figureColor lastHeldField
+                                                |> Html.text
+                                            ]
                                         ]
-                                    ]
+                                )
+                                model.player2Captures
                             )
-                            model.player2Captures
-                        )
+                        ]
                     ]
-                ]
 
-          else
-            Html.div
-                [ HA.class "flex gap-2" ]
-                [ Html.div
-                    [ HA.class "border border-white p-2" ]
-                    [ Html.h3
-                        []
-                        [ Html.text "White" ]
-                    , Html.ul
-                        []
-                        (List.map
-                            (\( figure, lastHeldField ) ->
-                                Html.li
-                                    []
-                                    [ figureToHtml (Just figure)
-                                    , Html.p []
-                                        [ Util.fieldToSpot model.isInvited lastHeldField
-                                            |> Html.text
+            Types.White ->
+                Html.div
+                    [ HA.class "flex gap-2" ]
+                    [ Html.div
+                        [ HA.class "border border-white p-2" ]
+                        [ Html.h3
+                            []
+                            [ Html.text "White" ]
+                        , Html.ul
+                            []
+                            (List.map
+                                (\( figure, lastHeldField ) ->
+                                    Html.li
+                                        []
+                                        [ figureToHtml (Just figure)
+                                        , Html.p []
+                                            [ Util.fieldToSpot model.figureColor lastHeldField
+                                                |> Html.text
+                                            ]
                                         ]
-                                    ]
+                                )
+                                model.player2Captures
                             )
-                            model.player2Captures
-                        )
-                    ]
-                , Html.div
-                    [ HA.class "border border-white p-2]" ]
-                    [ Html.h3
-                        []
-                        [ Html.text "Black" ]
-                    , Html.ul
-                        []
-                        (List.map
-                            (\( figure, lastHeldField ) ->
-                                Html.li
-                                    []
-                                    [ figureToHtml (Just figure)
-                                    , Html.p []
-                                        [ Util.fieldToSpot True lastHeldField
-                                            |> Html.text
+                        ]
+                    , Html.div
+                        [ HA.class "border border-white p-2]" ]
+                        [ Html.h3
+                            []
+                            [ Html.text "Black" ]
+                        , Html.ul
+                            []
+                            (List.map
+                                (\( figure, lastHeldField ) ->
+                                    Html.li
+                                        []
+                                        [ figureToHtml (Just figure)
+                                        , Html.p []
+                                            [ Util.fieldToSpot Types.Black lastHeldField
+                                                |> Html.text
+                                            ]
                                         ]
-                                    ]
+                                )
+                                model.player1Captures
                             )
-                            model.player1Captures
-                        )
+                        ]
                     ]
-                ]
         ]

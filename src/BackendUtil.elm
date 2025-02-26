@@ -70,8 +70,8 @@ convertRoles player =
         player
 
 
-transformGameToSendToFE : Dict String Types.Game -> Cmd msg
-transformGameToSendToFE games =
+transformGameToSendToFE : Dict String Types.Game -> Types.WhoseMove -> Cmd msg
+transformGameToSendToFE games whoseMove =
     {- Assuming you are supplying already updated games,
        idea is to transform game and roles inside of each player so that we can supply
        each pleayer on FE with correct "Opponent" and "Owner" data
@@ -113,9 +113,9 @@ transformGameToSendToFE games =
                         }
                 in
                 [ Lamdera.sendToFrontend owner.playersSessionId
-                    (Types.BeToChess <| Types.GameCurrentState gameFromOwnersPerspective)
+                    (Types.BeToChess <| Types.GameCurrentState gameFromOwnersPerspective whoseMove)
                 , Lamdera.sendToFrontend invitee.playersSessionId
-                    (Types.BeToChess <| Types.GameCurrentState gameFromInviteePerspective)
+                    (Types.BeToChess <| Types.GameCurrentState gameFromInviteePerspective whoseMove)
                 ]
             )
         |> List.concat

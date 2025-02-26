@@ -13,6 +13,20 @@ subscribeOnTimestamp toMsg =
     Ports.onTimestamp (\val -> toMsg (decodeInt val))
 
 
+mapToFigureColor : Maybe String -> Maybe Types.FigureColor
+mapToFigureColor ms =
+    ms
+        |> Maybe.map
+            (\str ->
+                if str == "true" then
+                    Just Types.Black
+
+                else
+                    Nothing
+            )
+        |> Maybe.withDefault (Just Types.White)
+
+
 decodeInt : Json.Decode.Value -> Int
 decodeInt val =
     case Json.Decode.decodeValue Json.Decode.int val |> Result.toMaybe of
@@ -42,73 +56,75 @@ getBaseUrl u =
                 ++ "/"
 
 
-indexToLetter : Bool -> Int -> String
-indexToLetter isInvited idx =
-    if isInvited then
-        case idx of
-            1 ->
-                "H"
+indexToLetter : Types.FigureColor -> Int -> String
+indexToLetter figureColor idx =
+    case figureColor of
+        Types.Black ->
+            case idx of
+                1 ->
+                    "H"
 
-            2 ->
-                "G"
+                2 ->
+                    "G"
 
-            3 ->
-                "F"
+                3 ->
+                    "F"
 
-            4 ->
-                "E"
+                4 ->
+                    "E"
 
-            5 ->
-                "D"
+                5 ->
+                    "D"
 
-            6 ->
-                "C"
+                6 ->
+                    "C"
 
-            7 ->
-                "B"
+                7 ->
+                    "B"
 
-            _ ->
-                "A"
+                _ ->
+                    "A"
 
-    else
-        case idx of
-            1 ->
-                "A"
+        Types.White ->
+            case idx of
+                1 ->
+                    "A"
 
-            2 ->
-                "B"
+                2 ->
+                    "B"
 
-            3 ->
-                "C"
+                3 ->
+                    "C"
 
-            4 ->
-                "D"
+                4 ->
+                    "D"
 
-            5 ->
-                "E"
+                5 ->
+                    "E"
 
-            6 ->
-                "F"
+                6 ->
+                    "F"
 
-            7 ->
-                "G"
+                7 ->
+                    "G"
 
-            _ ->
-                "H"
+                _ ->
+                    "H"
 
 
-fieldToSpot : Bool -> Types.Field -> String
-fieldToSpot isInvited { x, y } =
+fieldToSpot : Types.FigureColor -> Types.Field -> String
+fieldToSpot figureColor { x, y } =
     let
         sideTableNum : String
         sideTableNum =
-            if isInvited then
-                y |> String.fromInt
+            case figureColor of
+                Types.Black ->
+                    y |> String.fromInt
 
-            else
-                (9 - y) |> String.fromInt
+                Types.White ->
+                    (9 - y) |> String.fromInt
     in
-    indexToLetter isInvited x ++ sideTableNum
+    indexToLetter figureColor x ++ sideTableNum
 
 
 isOccupiedFieldsXY : Types.Field -> Int -> Int -> Bool

@@ -6,8 +6,8 @@ import Types
 
 
 type OutMsg
-    = SendPositionsUpdate String Bool ( List Types.FigureState, List Types.FigureState )
-    | SendCaptureUpdate String Bool ( Types.Figure, Types.Field )
+    = SendPositionsUpdate String Types.FigureColor ( List Types.FigureState, List Types.FigureState )
+    | SendCaptureUpdate String Types.FigureColor ( Types.Figure, Types.Field )
 
 
 
@@ -27,10 +27,10 @@ map outMsgs =
     List.map
         (\outMsg ->
             case outMsg of
-                SendPositionsUpdate roomId isInvitee game ->
-                    Lamdera.sendToBackend (Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId isInvitee game)
+                SendPositionsUpdate roomId figureColor game ->
+                    Lamdera.sendToBackend (Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId figureColor game)
 
-                SendCaptureUpdate roomId isInvitee capture ->
-                    Lamdera.sendToBackend (Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId isInvitee capture)
+                SendCaptureUpdate roomId figureColor capture ->
+                    Lamdera.sendToBackend (Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId figureColor capture)
         )
         outMsgs

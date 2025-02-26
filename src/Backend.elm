@@ -189,7 +189,7 @@ updateFromFrontend sessionId clientId msg model =
                                 model.games
                     in
                     ( { model | games = updateGames }
-                    , BackendUtil.transformGameToSendToFE updateGames
+                    , BackendUtil.transformGameToSendToFE updateGames <| Types.PlayersMove Types.White
                     )
             in
             case checkForProblems updated of
@@ -202,67 +202,75 @@ updateFromFrontend sessionId clientId msg model =
                 Ok updated_ ->
                     updated_
 
-        Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId isFromInviteePerspective ( pl1, pl2 ) ->
+        Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId figureColor ( pl1, pl2 ) ->
             let
                 updateGames : Dict String Types.Game
                 updateGames =
-                    if isFromInviteePerspective then
-                        BackendUtil.updateGames
-                            roomId
-                            model.games
-                            (\game invitee_ ->
-                                let
-                                    owner_ : Types.Player
-                                    owner_ =
-                                        game.owner
+                    case figureColor of
+                        Types.Black ->
+                            BackendUtil.updateGames
+                                roomId
+                                model.games
+                                (\game invitee_ ->
+                                    let
+                                        owner_ : Types.Player
+                                        owner_ =
+                                            game.owner
 
-                                    updateOwner : Types.Player
-                                    updateOwner =
-                                        { owner_ | figures = BackendUtil.convertRoles pl1 }
+                                        updateOwner : Types.Player
+                                        updateOwner =
+                                            { owner_ | figures = BackendUtil.convertRoles pl1 }
 
-                                    updateInvitee : Types.Player
-                                    updateInvitee =
-                                        { invitee_
-                                            | figures = BackendUtil.convertRoles pl2
-                                        }
-                                in
-                                { invitee = Just updateInvitee
-                                , owner = updateOwner
-                                }
-                            )
+                                        updateInvitee : Types.Player
+                                        updateInvitee =
+                                            { invitee_
+                                                | figures = BackendUtil.convertRoles pl2
+                                            }
+                                    in
+                                    { invitee = Just updateInvitee
+                                    , owner = updateOwner
+                                    }
+                                )
 
-                    else
-                        BackendUtil.updateGames
-                            roomId
-                            model.games
-                            (\game invitee_ ->
-                                let
-                                    owner_ : Types.Player
-                                    owner_ =
-                                        game.owner
+                        Types.White ->
+                            BackendUtil.updateGames
+                                roomId
+                                model.games
+                                (\game invitee_ ->
+                                    let
+                                        owner_ : Types.Player
+                                        owner_ =
+                                            game.owner
 
-                                    updateOwner : Types.Player
-                                    updateOwner =
-                                        { owner_ | figures = pl2 }
+                                        updateOwner : Types.Player
+                                        updateOwner =
+                                            { owner_ | figures = pl2 }
 
-                                    updateInvitee : Types.Player
-                                    updateInvitee =
-                                        { invitee_
-                                            | figures = pl1
-                                        }
-                                in
-                                { invitee = Just updateInvitee
-                                , owner = updateOwner
-                                }
-                            )
+                                        updateInvitee : Types.Player
+                                        updateInvitee =
+                                            { invitee_
+                                                | figures = pl1
+                                            }
+                                    in
+                                    { invitee = Just updateInvitee
+                                    , owner = updateOwner
+                                    }
+                                )
             in
             ( { model
                 | games = updateGames
               }
             , BackendUtil.transformGameToSendToFE updateGames
+                (case figureColor of
+                    Types.Black ->
+                        Types.PlayersMove Types.White
+
+                    Types.White ->
+                        Types.PlayersMove Types.Black
+                )
             )
 
-        Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId isFromInviteePerspective capture ->
+        Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId figureColor capture ->
             let
                 updateGames : Dict String Types.Game
                 updateGames =
@@ -270,37 +278,45 @@ updateFromFrontend sessionId clientId msg model =
                         roomId
                         model.games
                         (\game invitee_ ->
-                            if isFromInviteePerspective then
-                                let
-                                    updateInvitee : Types.Player
-                                    updateInvitee =
-                                        { invitee_
-                                            | captures = capture :: invitee_.captures
-                                        }
-                                in
-                                { game
-                                    | invitee = Just updateInvitee
-                                }
+                            case figureColor of
+                                Types.Black ->
+                                    let
+                                        updateInvitee : Types.Player
+                                        updateInvitee =
+                                            { invitee_
+                                                | captures = capture :: invitee_.captures
+                                            }
+                                    in
+                                    { game
+                                        | invitee = Just updateInvitee
+                                    }
 
-                            else
-                                let
-                                    owner_ : Types.Player
-                                    owner_ =
-                                        game.owner
+                                Types.White ->
+                                    let
+                                        owner_ : Types.Player
+                                        owner_ =
+                                            game.owner
 
-                                    updateOwner : Types.Player
-                                    updateOwner =
-                                        { owner_ | captures = capture :: owner_.captures }
-                                in
-                                { game
-                                    | owner = updateOwner
-                                }
+                                        updateOwner : Types.Player
+                                        updateOwner =
+                                            { owner_ | captures = capture :: owner_.captures }
+                                    in
+                                    { game
+                                        | owner = updateOwner
+                                    }
                         )
             in
             ( { model
                 | games = updateGames
               }
             , BackendUtil.transformGameToSendToFE updateGames
+                (case figureColor of
+                    Types.Black ->
+                        Types.PlayersMove Types.White
+
+                    Types.White ->
+                        Types.PlayersMove Types.Black
+                )
             )
 
 

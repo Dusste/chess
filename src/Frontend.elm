@@ -27,9 +27,10 @@ type alias Model =
 
 
 type Route
-    = Chess String Bool
+    = Chess String Types.FigureColor
     | Home
     | BackwardCompatibility (Maybe Types.Figure)
+    | NotFound
 
 
 matchRoute : Url.Parser.Parser (Route -> a) a
@@ -38,7 +39,12 @@ matchRoute =
         [ Url.Parser.map Home Url.Parser.top
         , Url.Parser.map
             (\urlString maybeInvitee ->
-                Chess urlString (Maybe.Extra.isJust maybeInvitee)
+                case Util.mapToFigureColor maybeInvitee of
+                    Just figureColor ->
+                        Chess urlString figureColor
+
+                    Nothing ->
+                        NotFound
             )
             (Url.Parser.s "room" </> (Url.Parser.string <?> Query.string "invite"))
         , Url.Parser.map (BackwardCompatibility Nothing) (Url.Parser.s "tests")
@@ -85,8 +91,8 @@ urlToPage url uuid key =
                 Nothing ->
                     Types.NotFoundPage
 
-        Just (Chess uuidStr isInvited) ->
-            Types.ChessPage (Tuple.first <| Chess.init uuidStr (Url.toString url) isInvited)
+        Just (Chess uuidStr figureColor) ->
+            Types.ChessPage (Tuple.first <| Chess.init uuidStr (Url.toString url) figureColor)
 
         Just (BackwardCompatibility maybeFigure) ->
             Types.BackwardCompatibilityPage (Tuple.first (BackwardCompatibility.init maybeFigure))
@@ -257,7 +263,7 @@ updateFromBackend msg model =
 
         Types.BeToChess toChessMsg ->
             case toChessMsg of
-                Types.GameCurrentState game ->
+                Types.GameCurrentState game whoseMove ->
                     let
                         ( updatedPage, cmd ) =
                             -- TODO find better way to update Chess
@@ -266,7 +272,7 @@ updateFromBackend msg model =
                                 Types.ChessPage mainModel ->
                                     let
                                         ( model_, _, cmds_ ) =
-                                            Chess.update (Types.FeToChess_GotGameData game) mainModel
+                                            Chess.update (Types.FeToChess_GotGameData game whoseMove) mainModel
                                     in
                                     ( Types.ChessPage model_
                                     , Cmd.map Types.GotChessPageMsg cmds_
