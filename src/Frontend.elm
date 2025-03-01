@@ -82,23 +82,27 @@ paramStringToFigure =
 
 urlToPage : Url -> Maybe UUID.UUID -> Nav.Key -> Types.Page
 urlToPage url uuid key =
-    case Url.Parser.parse matchRoute url of
-        Just Home ->
-            case uuid of
-                Just uuid_ ->
+    case uuid of
+        Just uuid_ ->
+            case Url.Parser.parse matchRoute url of
+                Just Home ->
+                    -- case uuid of
+                    --     Just uuid_ ->
                     Types.HomePage (Tuple.first <| Home.init (UUID.toString uuid_) key)
 
-                Nothing ->
+                -- Nothing ->
+                --     Types.NotFoundPage
+                Just (Chess uuidStr figureColor) ->
+                    Types.ChessPage (Tuple.first <| Chess.init uuidStr (Url.toString url) figureColor)
+
+                Just (BackwardCompatibility maybeFigure) ->
+                    Types.BackwardCompatibilityPage (Tuple.first (BackwardCompatibility.init maybeFigure))
+
+                _ ->
                     Types.NotFoundPage
 
-        Just (Chess uuidStr figureColor) ->
-            Types.ChessPage (Tuple.first <| Chess.init uuidStr (Url.toString url) figureColor)
-
-        Just (BackwardCompatibility maybeFigure) ->
-            Types.BackwardCompatibilityPage (Tuple.first (BackwardCompatibility.init maybeFigure))
-
-        _ ->
-            Types.NotFoundPage
+        Nothing ->
+            Types.Loading
 
 
 initCurrentPage : Model -> ( Model, Cmd Types.FrontendMsg )

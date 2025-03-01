@@ -12,7 +12,7 @@ type alias FrontendModel =
     { url : Url.Url
     , key : Nav.Key
     , page : Page
-    , game : Maybe GameFE
+    , game : Maybe GameFE -- TODO remove game from model since you are just passing it from BE to Chess
     , uuid : Maybe UUID.UUID
     }
 
@@ -142,6 +142,7 @@ type alias BackendModel =
 type alias Game =
     { owner : Player
     , invitee : Maybe Player
+    , whoseMove : WhoseMove
     }
 
 
@@ -208,3 +209,4 @@ type ChessMsg
         }
     | CopyRoomUrl
     | FeToChess_GotGameData GameFE WhoseMove
+    | NotYourMove

@@ -12,6 +12,56 @@ type alias Model =
     Types.BackendModel
 
 
+
+{-
+   - REAL STARTING POSITIONS -
+   startPositionPlayer1 : List FigureState
+   startPositionPlayer1 =
+       [ { figure = Rook, moves = [ { x = 1, y = 1 } ] }
+       , { figure = Rook, moves = [ { x = 8, y = 1 } ] }
+       , { figure = Pawn, moves = [ { x = 1, y = 2 } ] }
+       , { figure = Pawn, moves = [ { x = 2, y = 2 } ] }
+       , { figure = Pawn, moves = [ { x = 3, y = 2 } ] }
+       , { figure = Pawn, moves = [ { x = 4, y = 2 } ] }
+       , { figure = Pawn, moves = [ { x = 5, y = 2 } ] }
+       , { figure = Pawn, moves = [ { x = 6, y = 2 } ] }
+       , { figure = Pawn, moves = [ { x = 7, y = 2 } ] }
+       , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
+       , { figure = Knight, moves = [ { x = 2, y = 1 } ] }
+       , { figure = Knight, moves = [ { x = 7, y = 1 } ] }
+       , { figure = Bishop, moves = [ { x = 3, y = 1 } ] }
+       , { figure = Bishop, moves = [ { x = 6, y = 1 } ] }
+       , { figure = King, moves = [ { x = 5, y = 1 } ] }
+       , { figure = Queen, moves = [ { x = 4, y = 1 } ] }
+       ]
+   {-
+
+
+   -}
+   startPositionPlayer2 : List FigureState
+   startPositionPlayer2 =
+       [ { figure = Rook, moves = [ { x = 1, y = 8 } ] }
+       , { figure = Rook, moves = [ { x = 8, y = 8 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 1, y = 7 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 2, y = 7 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 3, y = 7 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 4, y = 7 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 5, y = 7 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 6, y = 7 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 7, y = 7 } ] }
+       , { figure = Types.Pawn, moves = [ { x = 8, y = 7 } ] }
+       , { figure = Knight, moves = [ { x = 2, y = 8 } ] }
+       , { figure = Knight, moves = [ { x = 7, y = 8 } ] }
+       , { figure = Bishop, moves = [ { x = 3, y = 8 } ] }
+       , { figure = Bishop, moves = [ { x = 6, y = 8 } ] }
+       , { figure = King, moves = [ { x = 5, y = 8 } ] }
+       , { figure = Queen, moves = [ { x = 4, y = 8 } ] }
+       ]
+
+
+-}
+
+
 startPositionPlayer1 : List Types.FigureState
 startPositionPlayer1 =
     [ ( Types.Opponent, { figure = Types.Rook, moves = [ { x = 1, y = 1 } ] } )
@@ -132,78 +182,107 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         Types.InitiateGame roomId ->
-            ( { model
-                | games =
-                    Dict.insert roomId
-                        { owner =
-                            { playersSessionId = sessionId
-                            , figures = startPositionPlayer2
-                            , captures = []
-                            }
-                        , invitee = Nothing
-                        }
-                        model.games
-              }
-            , Cmd.none
-            )
+            -- Check if you are in persistent game (maybe you've refreshed browser?)
+            case Dict.get roomId model.games of
+                Just gameinProgress ->
+                    case gameinProgress.invitee of
+                        Just invitee_ ->
+                            ( model
+                            , Cmd.batch <|
+                                BackendUtil.toPlayersPerspective
+                                    gameinProgress.whoseMove
+                                    { owner = gameinProgress.owner, invitee = invitee_ }
+                            )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Nothing ->
+                    ( { model
+                        | games =
+                            Dict.insert roomId
+                                { owner =
+                                    { playersSessionId = sessionId
+                                    , figures = startPositionPlayer2
+                                    , captures = []
+                                    }
+                                , invitee = Nothing
+                                , whoseMove = Types.PlayersMove Types.White
+                                }
+                                model.games
+                      }
+                    , Cmd.none
+                    )
 
         Types.JoinGame roomId ->
             let
-                checkForProblems : a -> Result String a
-                checkForProblems a =
-                    -- Check for any misbehaviour and if all good just send wahtever passed
-                    Dict.get roomId model.games
-                        |> Maybe.map
-                            (\{ invitee, owner } ->
-                                case invitee of
-                                    Just _ ->
-                                        Err "JoinGame: Game has already started"
-
-                                    Nothing ->
-                                        if sessionId == owner.playersSessionId then
-                                            Err "JoinGame: You are trying to play game with yourself, that is not posible"
-
-                                        else
-                                            Ok a
-                            )
-                        |> Maybe.withDefault (Err "Something went terribly wrong")
-
-                updated : ( Model, Cmd Types.BackendMsg )
-                updated =
+                newGameUpdateFlow : ( Model, Cmd Types.BackendMsg )
+                newGameUpdateFlow =
                     let
-                        updateGames : Dict String Types.Game
-                        updateGames =
-                            Dict.update roomId
-                                (Maybe.map
-                                    (\game ->
-                                        { game
-                                            | invitee =
-                                                Just
-                                                    { playersSessionId = sessionId
-                                                    , figures = startPositionPlayer1
-                                                    , captures = []
-                                                    }
-                                        }
-                                    )
-                                )
-                                model.games
+                        updated : ( Model, Cmd Types.BackendMsg )
+                        updated =
+                            let
+                                updateGames : Dict String Types.Game
+                                updateGames =
+                                    Dict.update roomId
+                                        (Maybe.map
+                                            (\game ->
+                                                { game
+                                                    | invitee =
+                                                        Just
+                                                            { playersSessionId = sessionId
+                                                            , figures = startPositionPlayer1
+                                                            , captures = []
+                                                            }
+                                                }
+                                            )
+                                        )
+                                        model.games
+                            in
+                            ( { model | games = updateGames }
+                            , BackendUtil.transformGameToSendToFE updateGames <| Types.PlayersMove Types.White
+                            )
                     in
-                    ( { model | games = updateGames }
-                    , BackendUtil.transformGameToSendToFE updateGames <| Types.PlayersMove Types.White
-                    )
-            in
-            case checkForProblems updated of
-                Err err ->
-                    ( model
-                    , Lamdera.sendToFrontend sessionId
-                        (Types.BeToChess <| Types.ResponseError err)
-                    )
+                    case BackendUtil.checkForProblems roomId sessionId model updated of
+                        Err err ->
+                            ( model
+                            , Lamdera.sendToFrontend sessionId
+                                (Types.BeToChess <| Types.ResponseError err)
+                            )
 
-                Ok updated_ ->
-                    updated_
+                        Ok updated_ ->
+                            updated_
+            in
+            -- Check if you are in persistent game (maybe you've refreshed browser?)
+            case Dict.get roomId model.games of
+                Just gameinProgress ->
+                    case gameinProgress.invitee of
+                        Just invitee_ ->
+                            ( model
+                            , Cmd.batch <|
+                                BackendUtil.toPlayersPerspective
+                                    gameinProgress.whoseMove
+                                    { owner = gameinProgress.owner, invitee = invitee_ }
+                            )
+
+                        Nothing ->
+                            -- Not started game should have roomId but not invitee
+                            newGameUpdateFlow
+
+                Nothing ->
+                    newGameUpdateFlow
 
         Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId figureColor ( pl1, pl2 ) ->
             let
+                whoseMove_ : Types.WhoseMove
+                whoseMove_ =
+                    case figureColor of
+                        Types.Black ->
+                            Types.PlayersMove Types.White
+
+                        Types.White ->
+                            Types.PlayersMove Types.Black
+
                 updateGames : Dict String Types.Game
                 updateGames =
                     case figureColor of
@@ -229,6 +308,7 @@ updateFromFrontend sessionId clientId msg model =
                                     in
                                     { invitee = Just updateInvitee
                                     , owner = updateOwner
+                                    , whoseMove = whoseMove_
                                     }
                                 )
 
@@ -254,24 +334,25 @@ updateFromFrontend sessionId clientId msg model =
                                     in
                                     { invitee = Just updateInvitee
                                     , owner = updateOwner
+                                    , whoseMove = whoseMove_
                                     }
                                 )
             in
-            ( { model
-                | games = updateGames
-              }
-            , BackendUtil.transformGameToSendToFE updateGames
-                (case figureColor of
-                    Types.Black ->
-                        Types.PlayersMove Types.White
-
-                    Types.White ->
-                        Types.PlayersMove Types.Black
-                )
+            ( { model | games = updateGames }
+            , BackendUtil.transformGameToSendToFE updateGames whoseMove_
             )
 
         Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId figureColor capture ->
             let
+                whoseMove_ : Types.WhoseMove
+                whoseMove_ =
+                    case figureColor of
+                        Types.Black ->
+                            Types.PlayersMove Types.White
+
+                        Types.White ->
+                            Types.PlayersMove Types.Black
+
                 updateGames : Dict String Types.Game
                 updateGames =
                     BackendUtil.updateGames
@@ -289,6 +370,7 @@ updateFromFrontend sessionId clientId msg model =
                                     in
                                     { game
                                         | invitee = Just updateInvitee
+                                        , whoseMove = whoseMove_
                                     }
 
                                 Types.White ->
@@ -303,20 +385,12 @@ updateFromFrontend sessionId clientId msg model =
                                     in
                                     { game
                                         | owner = updateOwner
+                                        , whoseMove = whoseMove_
                                     }
                         )
             in
-            ( { model
-                | games = updateGames
-              }
-            , BackendUtil.transformGameToSendToFE updateGames
-                (case figureColor of
-                    Types.Black ->
-                        Types.PlayersMove Types.White
-
-                    Types.White ->
-                        Types.PlayersMove Types.Black
-                )
+            ( { model | games = updateGames }
+            , BackendUtil.transformGameToSendToFE updateGames whoseMove_
             )
 
 

@@ -87,39 +87,44 @@ transformGameToSendToFE games whoseMove =
                         []
             )
             []
-        |> List.map
-            (\{ owner, invitee } ->
-                let
-                    gameFromOwnersPerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
-                    gameFromOwnersPerspective =
-                        { player1 = { figures = invitee.figures, captures = invitee.captures }
-                        , player2 = { figures = owner.figures, captures = owner.captures }
-                        }
-
-                    convertOpponentToMe : List Types.FigureState
-                    convertOpponentToMe =
-                        -- Opponent is looking in game from the first person
-                        convertRoles invitee.figures
-
-                    convertMeToOpponent : List Types.FigureState
-                    convertMeToOpponent =
-                        -- From Opponent's perspective - I am Opponent
-                        convertRoles owner.figures
-
-                    gameFromInviteePerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
-                    gameFromInviteePerspective =
-                        { player1 = { figures = convertMeToOpponent, captures = owner.captures }
-                        , player2 = { figures = convertOpponentToMe, captures = invitee.captures }
-                        }
-                in
-                [ Lamdera.sendToFrontend owner.playersSessionId
-                    (Types.BeToChess <| Types.GameCurrentState gameFromOwnersPerspective whoseMove)
-                , Lamdera.sendToFrontend invitee.playersSessionId
-                    (Types.BeToChess <| Types.GameCurrentState gameFromInviteePerspective whoseMove)
-                ]
-            )
+        |> List.map (toPlayersPerspective whoseMove)
         |> List.concat
         |> Cmd.batch
+
+
+toPlayersPerspective :
+    Types.WhoseMove
+    -> { owner : Types.Player, invitee : Types.Player }
+    -> List (Cmd backendMsg)
+toPlayersPerspective whoseMove { owner, invitee } =
+    let
+        gameFromOwnersPerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
+        gameFromOwnersPerspective =
+            { player1 = { figures = invitee.figures, captures = invitee.captures }
+            , player2 = { figures = owner.figures, captures = owner.captures }
+            }
+
+        convertOpponentToMe : List Types.FigureState
+        convertOpponentToMe =
+            -- Opponent is looking in game from the first person
+            convertRoles invitee.figures
+
+        convertMeToOpponent : List Types.FigureState
+        convertMeToOpponent =
+            -- From Opponent's perspective - I am Opponent
+            convertRoles owner.figures
+
+        gameFromInviteePerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
+        gameFromInviteePerspective =
+            { player1 = { figures = convertMeToOpponent, captures = owner.captures }
+            , player2 = { figures = convertOpponentToMe, captures = invitee.captures }
+            }
+    in
+    [ Lamdera.sendToFrontend owner.playersSessionId
+        (Types.BeToChess <| Types.GameCurrentState gameFromOwnersPerspective whoseMove)
+    , Lamdera.sendToFrontend invitee.playersSessionId
+        (Types.BeToChess <| Types.GameCurrentState gameFromInviteePerspective whoseMove)
+    ]
 
 
 updateGames : String -> Dict String Types.Game -> (Types.Game -> Types.Player -> Types.Game) -> Dict String Types.Game
@@ -133,3 +138,24 @@ updateGames roomId games callback =
             )
         )
         games
+
+
+checkForProblems : String -> Lamdera.SessionId -> Types.BackendModel -> ( Types.BackendModel, Cmd backendMsg ) -> Result String ( Types.BackendModel, Cmd backendMsg )
+checkForProblems roomId sessionId model_ updted =
+    -- Check for any misbehaviour and if all good just send wahtever passed
+    Dict.get roomId model_.games
+        |> Maybe.map
+            (\{ invitee, owner } ->
+                case invitee of
+                    Just _ ->
+                        -- Err "JoinGame: Game has already started"
+                        Ok updted
+
+                    Nothing ->
+                        if sessionId == owner.playersSessionId then
+                            Err "JoinGame: You are trying to play game with yourself, that is not posible"
+
+                        else
+                            Ok updted
+            )
+        |> Maybe.withDefault (Err "Something went terribly wrong")

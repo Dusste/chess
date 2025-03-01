@@ -25,98 +25,6 @@ number_of_columns =
     8
 
 
-startPositionPlayer1 : List Types.FigureState
-startPositionPlayer1 =
-    [ ( Types.Opponent, { figure = Types.Rook, moves = [ { x = 1, y = 1 } ] } )
-    , ( Types.Opponent, { figure = Types.Rook, moves = [ { x = 8, y = 1 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 1, y = 2 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 2, y = 2 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 3, y = 2 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 4, y = 2 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 5, y = 2 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 6, y = 2 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 7, y = 7 } ] } )
-    , ( Types.Opponent, { figure = Types.Pawn, moves = [ { x = 8, y = 2 } ] } )
-    , ( Types.Opponent, { figure = Types.Knight, moves = [ { x = 2, y = 1 } ] } )
-    , ( Types.Opponent, { figure = Types.Knight, moves = [ { x = 7, y = 1 } ] } )
-    , ( Types.Opponent, { figure = Types.Bishop, moves = [ { x = 3, y = 1 } ] } )
-    , ( Types.Opponent, { figure = Types.Bishop, moves = [ { x = 6, y = 1 } ] } )
-    , ( Types.Opponent, { figure = Types.King, moves = [ { x = 5, y = 1 } ] } )
-    , ( Types.Opponent, { figure = Types.Queen, moves = [ { x = 4, y = 1 } ] } )
-    ]
-
-
-
--- startPositionPlayer1 : List FigureState
--- startPositionPlayer1 =
---     [ { figure = Rook, moves = [ { x = 1, y = 1 } ] }
---     , { figure = Rook, moves = [ { x = 8, y = 1 } ] }
---     , { figure = Pawn, moves = [ { x = 1, y = 2 } ] }
---     , { figure = Pawn, moves = [ { x = 2, y = 2 } ] }
---     , { figure = Pawn, moves = [ { x = 3, y = 2 } ] }
---     , { figure = Pawn, moves = [ { x = 4, y = 2 } ] }
---     , { figure = Pawn, moves = [ { x = 5, y = 2 } ] }
---     , { figure = Pawn, moves = [ { x = 6, y = 2 } ] }
---     , { figure = Pawn, moves = [ { x = 7, y = 2 } ] }
---     , { figure = Pawn, moves = [ { x = 8, y = 2 } ] }
---     , { figure = Knight, moves = [ { x = 2, y = 1 } ] }
---     , { figure = Knight, moves = [ { x = 7, y = 1 } ] }
---     , { figure = Bishop, moves = [ { x = 3, y = 1 } ] }
---     , { figure = Bishop, moves = [ { x = 6, y = 1 } ] }
---     , { figure = King, moves = [ { x = 5, y = 1 } ] }
---     , { figure = Queen, moves = [ { x = 4, y = 1 } ] }
---     ]
--- {-
-
-
-startPositionPlayer2 : List Types.FigureState
-startPositionPlayer2 =
-    [ ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 7 } ] } )
-    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 7, y = 5 } ] } )
-    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 6, y = 8 } ] } )
-    , ( Types.Me, { figure = Types.Rook, moves = [ { x = 4, y = 3 } ] } )
-    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 8, y = 3 } ] } )
-    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] } )
-    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 1, y = 6 } ] } )
-
-    -- , { figure = Types.Pawn, moves = [ { x = 5, y = 3 } ] }
-    -- , { figure = Types.Pawn, moves = [ { x = 1, y = 3 } ] }
-    -- , { figure = Types.Pawn, moves = [ { x = 5, y = 7 } ] }
-    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 8 } ] } )
-    , ( Types.Me, { figure = Types.Pawn, moves = [ { x = 7, y = 4 } ] } )
-    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 1, y = 4 } ] } )
-    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 3, y = 4 } ] } )
-    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 8, y = 8 } ] } )
-    , ( Types.Me, { figure = Types.Knight, moves = [ { x = 3, y = 6 } ] } )
-    , ( Types.Me, { figure = Types.Bishop, moves = [ { x = 7, y = 6 } ] } )
-    , ( Types.Me, { figure = Types.King, moves = [ { x = 5, y = 6 } ] } )
-    , ( Types.Me, { figure = Types.Queen, moves = [ { x = 5, y = 5 } ] } )
-    ]
-
-
-
--- -}
--- startPositionPlayer2 : List FigureState
--- startPositionPlayer2 =
---     [ { figure = Rook, moves = [ { x = 1, y = 8 } ] }
---     , { figure = Rook, moves = [ { x = 8, y = 8 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 1, y = 7 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 2, y = 7 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 3, y = 7 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 4, y = 7 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 5, y = 7 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 6, y = 7 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 7, y = 7 } ] }
---     , { figure = Types.Pawn, moves = [ { x = 8, y = 7 } ] }
---     , { figure = Knight, moves = [ { x = 2, y = 8 } ] }
---     , { figure = Knight, moves = [ { x = 7, y = 8 } ] }
---     , { figure = Bishop, moves = [ { x = 3, y = 8 } ] }
---     , { figure = Bishop, moves = [ { x = 6, y = 8 } ] }
---     , { figure = King, moves = [ { x = 5, y = 8 } ] }
---     , { figure = Queen, moves = [ { x = 4, y = 8 } ] }
---     ]
-
-
 figureElement : String -> Html msg
 figureElement txt =
     Html.div
@@ -126,6 +34,7 @@ figureElement txt =
 
 figureToHtml : Maybe Types.Figure -> Html msg
 figureToHtml maybeFigure =
+    -- TODO should be images
     case maybeFigure of
         Just figure ->
             case figure of
@@ -257,10 +166,6 @@ update msg model =
                         -- It's IDLE -> Check if someone is blocking your move
                         if cannotMoveOrCapture then
                             -- Ilegal move -> Your other figure is preventing you to move
-                            let
-                                _ =
-                                    Debug.log "It seems that potential next step for this figure is to step over your other figure :( Not possible" ""
-                            in
                             ( { model | error = Just "Your other figure is preventing you to move with this figure" }
                             , []
                             , Cmd.none
@@ -437,6 +342,10 @@ update msg model =
             , Cmd.none
             )
 
+        Types.NotYourMove ->
+            -- TODO should be a toster notification, check todo list
+            ( { model | error = Just "It's not you move buddy" }, [], Cmd.none )
+
 
 findFigureOnThatField : Int -> Int -> List Types.FigureState -> Maybe Types.FigureState
 findFigureOnThatField x1 y1 lst =
@@ -529,7 +438,7 @@ viewField model xIndex yIndex =
                                             Types.NoOp
 
                             else
-                                Types.NoOp
+                                Types.NotYourMove
 
                         Types.Black ->
                             if model.figureColor == Types.Black then
@@ -545,7 +454,7 @@ viewField model xIndex yIndex =
                                             Types.NoOp
 
                             else
-                                Types.NoOp
+                                Types.NotYourMove
 
                 Types.GameIdle ->
                     Types.NoOp
@@ -657,25 +566,19 @@ view model =
                     ]
 
             Types.White ->
+                -- TODO I see some annoying jumps on refresh
                 Html.div
                     [ HA.class "flex flex-col mb-4" ]
-                    [ Html.h1
-                        [ HA.class "text-4xl m-10 text-center" ]
-                        [ Html.text <|
-                            case model.whoseMove of
-                                Types.GameIdle ->
-                                    "You are about to start a game with friend"
+                    [ case model.whoseMove of
+                        Types.GameIdle ->
+                            Html.h1
+                                [ HA.class "text-4xl m-10 text-center" ]
+                                [ Html.text "You are about to start a game with friend" ]
 
-                                -- Types.StartGame ->
-                                --     "Let the game begin ! White's move"
-                                Types.PlayersMove figureColor ->
-                                    case figureColor of
-                                        Types.Black ->
-                                            "Black's move"
-
-                                        Types.White ->
-                                            "White's move"
-                        ]
+                        -- Types.StartGame ->
+                        --     "Let the game begin ! White's move"
+                        Types.PlayersMove figureColor ->
+                            viewWhoseMove figureColor
                     , Html.Extra.viewIf (model.whoseMove == Types.GameIdle)
                         (Html.div [ HA.class "flex flex-col" ]
                             [ Html.p
@@ -720,6 +623,20 @@ view model =
             )
             (capturesView model)
         ]
+
+
+viewWhoseMove : Types.FigureColor -> Html Msg
+viewWhoseMove figureColor =
+    case figureColor of
+        Types.Black ->
+            Html.p
+                [ HA.class "text-center" ]
+                [ Html.text "Black's move" ]
+
+        Types.White ->
+            Html.p
+                [ HA.class "text-center" ]
+                [ Html.text "White's move" ]
 
 
 capturesView : Model -> Html Msg
