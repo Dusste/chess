@@ -134,8 +134,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Queen
                                         { x = 5, y = 5 }
-                                        Helper.opponentPositions
-                                        Helper.queenPossitionsTest1
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.queenPossitionsTest1, Types.Active )
                               , expected = Helper.queenExpectedTestUnit1
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.queenPossitionsTest1
@@ -146,8 +146,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Queen
                                         { x = 2, y = 8 }
-                                        Helper.opponentPositions
-                                        Helper.queenPossitionsTest2
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.queenPossitionsTest2, Types.Active )
                               , expected = Helper.queenExpectedTestUnit2
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.queenPossitionsTest2
@@ -158,8 +158,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Queen
                                         { x = 7, y = 3 }
-                                        Helper.opponentPositions
-                                        Helper.queenPossitionsTest3
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.queenPossitionsTest3, Types.Active )
                               , expected = Helper.queenExpectedTestUnit3
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.queenPossitionsTest3
@@ -185,8 +185,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.King
                                         { x = 5, y = 6 }
-                                        Helper.opponentPositions
-                                        Helper.kingPossitionsTest1
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.kingPossitionsTest1, Types.Active )
                               , expected = Helper.kingExpectedTestUnit1
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.kingPossitionsTest1
@@ -197,8 +197,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.King
                                         { x = 6, y = 3 }
-                                        Helper.opponentPositions
-                                        Helper.kingPossitionsTest2
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.kingPossitionsTest2, Types.Active )
                               , expected = Helper.kingExpectedTestUnit2
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.kingPossitionsTest2
@@ -209,8 +209,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.King
                                         { x = 1, y = 3 }
-                                        Helper.opponentPositions
-                                        Helper.kingPossitionsTest3
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.kingPossitionsTest3, Types.Active )
                               , expected = Helper.kingExpectedTestUnit3
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.kingPossitionsTest3
@@ -236,8 +236,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Rook
                                         { x = 4, y = 7 }
-                                        Helper.opponentPositions
-                                        Helper.rookPossitionsTest1
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.rookPossitionsTest1, Types.Active )
                               , expected = Helper.rookExpectedTestUnit1
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.rookPossitionsTest1
@@ -248,8 +248,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Rook
                                         { x = 6, y = 4 }
-                                        Helper.opponentPositions
-                                        Helper.rookPossitionsTest2
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.rookPossitionsTest2, Types.Active )
                               , expected = Helper.rookExpectedTestUnit2
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.rookPossitionsTest2
@@ -260,8 +260,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Rook
                                         { x = 1, y = 8 }
-                                        Helper.opponentPositions
-                                        Helper.rookPossitionsTest3
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.rookPossitionsTest3, Types.Active )
                               , expected = Helper.rookExpectedTestUnit3
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.rookPossitionsTest3
@@ -287,8 +287,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Knight
                                         { x = 6, y = 7 }
-                                        Helper.opponentPositions
-                                        Helper.knightPossitionsTest1
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.knightPossitionsTest1, Types.Active )
                               , expected = Helper.knightExpectedTestUnit1
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.knightPossitionsTest1
@@ -299,8 +299,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Knight
                                         { x = 5, y = 4 }
-                                        Helper.opponentPositions
-                                        Helper.knightPossitionsTest2
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.knightPossitionsTest2, Types.Active )
                               , expected = Helper.knightExpectedTestUnit2
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.knightPossitionsTest2
@@ -311,8 +311,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Knight
                                         { x = 3, y = 3 }
-                                        Helper.opponentPositions
-                                        Helper.knightPossitionsTest3
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.knightPossitionsTest3, Types.Active )
                               , expected = Helper.knightExpectedTestUnit3
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.knightPossitionsTest3
@@ -338,8 +338,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Bishop
                                         { x = 4, y = 5 }
-                                        Helper.opponentPositions
-                                        Helper.bishopPossitionsTest1
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.bishopPossitionsTest1, Types.Active )
                               , expected = Helper.bishopExpectedTestUnit1
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.bishopPossitionsTest1
@@ -350,8 +350,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Bishop
                                         { x = 6, y = 3 }
-                                        Helper.opponentPositions
-                                        Helper.bishopPossitionsTest2
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.bishopPossitionsTest2, Types.Active )
                               , expected = Helper.bishopExpectedTestUnit2
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.bishopPossitionsTest2
@@ -362,8 +362,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Bishop
                                         { x = 2, y = 3 }
-                                        Helper.opponentPositions
-                                        Helper.bishopPossitionsTest3
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.bishopPossitionsTest3, Types.Active )
                               , expected = Helper.bishopExpectedTestUnit3
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.bishopPossitionsTest3
@@ -389,8 +389,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Pawn
                                         { x = 7, y = 4 }
-                                        Helper.opponentPositions
-                                        Helper.pawnPossitionsTest1
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.pawnPossitionsTest1, Types.Active )
                               , expected = Helper.pawnExpectedTestUnit1
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.pawnPossitionsTest1
@@ -401,8 +401,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Pawn
                                         { x = 7, y = 3 }
-                                        Helper.opponentPositions
-                                        Helper.pawnPossitionsTest2
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.pawnPossitionsTest2, Types.Active )
                               , expected = Helper.pawnExpectedTestUnit2
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.pawnPossitionsTest2
@@ -413,8 +413,8 @@ view model =
                                     Util.getNextPossibleMoves
                                         Types.Pawn
                                         { x = 7, y = 2 }
-                                        Helper.opponentPositions
-                                        Helper.pawnPossitionsTest3
+                                        ( Helper.opponentPositions, Types.Active )
+                                        ( Helper.pawnPossitionsTest3, Types.Active )
                               , expected = Helper.pawnExpectedTestUnit3
                               , opponentPositions = Helper.opponentPositions
                               , myPossitions = Helper.pawnPossitionsTest3

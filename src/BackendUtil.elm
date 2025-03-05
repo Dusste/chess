@@ -98,10 +98,18 @@ toPlayersPerspective :
     -> List (Cmd backendMsg)
 toPlayersPerspective whoseMove { owner, invitee } =
     let
-        gameFromOwnersPerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
-        gameFromOwnersPerspective =
-            { player1 = { figures = invitee.figures, captures = invitee.captures }
-            , player2 = { figures = owner.figures, captures = owner.captures }
+        toPlayerFEFromOwnersPerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
+        toPlayerFEFromOwnersPerspective =
+            { player1 =
+                { figures = invitee.figures
+                , captures = invitee.captures
+                , status = invitee.status
+                }
+            , player2 =
+                { figures = owner.figures
+                , captures = owner.captures
+                , status = owner.status
+                }
             }
 
         convertOpponentToMe : List Types.FigureState
@@ -114,16 +122,24 @@ toPlayersPerspective whoseMove { owner, invitee } =
             -- From Opponent's perspective - I am Opponent
             convertRoles owner.figures
 
-        gameFromInviteePerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
-        gameFromInviteePerspective =
-            { player1 = { figures = convertMeToOpponent, captures = owner.captures }
-            , player2 = { figures = convertOpponentToMe, captures = invitee.captures }
+        toPlayerFEFromInviteePerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
+        toPlayerFEFromInviteePerspective =
+            { player1 =
+                { figures = convertMeToOpponent
+                , captures = owner.captures
+                , status = owner.status
+                }
+            , player2 =
+                { figures = convertOpponentToMe
+                , captures = invitee.captures
+                , status = invitee.status
+                }
             }
     in
     [ Lamdera.sendToFrontend owner.playersSessionId
-        (Types.BeToChess <| Types.GameCurrentState gameFromOwnersPerspective whoseMove)
+        (Types.BeToChess <| Types.GameCurrentState toPlayerFEFromOwnersPerspective whoseMove)
     , Lamdera.sendToFrontend invitee.playersSessionId
-        (Types.BeToChess <| Types.GameCurrentState gameFromInviteePerspective whoseMove)
+        (Types.BeToChess <| Types.GameCurrentState toPlayerFEFromInviteePerspective whoseMove)
     ]
 
 
@@ -138,6 +154,14 @@ updateGames roomId games callback =
             )
         )
         games
+
+
+getWhoseMoveMaybeWhite : String -> Dict String Types.Game -> Types.WhoseMove
+getWhoseMoveMaybeWhite roomId games =
+    games
+        |> Dict.get roomId
+        |> Maybe.map .whoseMove
+        |> Maybe.withDefault (Types.PlayersMove Types.White)
 
 
 checkForProblems : String -> Lamdera.SessionId -> Types.BackendModel -> ( Types.BackendModel, Cmd backendMsg ) -> Result String ( Types.BackendModel, Cmd backendMsg )

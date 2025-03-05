@@ -73,8 +73,8 @@ init roomId urlString figureColor =
 
 initialModel : String -> Types.FigureColor -> String -> Model
 initialModel urlString figureColor roomId =
-    { player1 = []
-    , player2 = []
+    { player1 = ( [], Types.Inactive )
+    , player2 = ( [], Types.Inactive )
     , possibleNextMoves = Types.Idle
     , error = Nothing
     , player1Captures = [] -- TODO Need to send captures from BE for opponent
@@ -204,9 +204,9 @@ update msg model =
                                     if isOkToMove then
                                         -- Alright, good to go !
                                         let
-                                            updatePlayer2 : List Types.FigureState
+                                            updatePlayer2 : ( List Types.FigureState, Types.PlayerStatus )
                                             updatePlayer2 =
-                                                List.map
+                                                ( List.map
                                                     (\( pt, fs ) ->
                                                         ( pt
                                                         , { fs
@@ -222,13 +222,15 @@ update msg model =
                                                           }
                                                         )
                                                     )
-                                                    model.player2
+                                                    (Tuple.first model.player2)
+                                                , Tuple.second model.player2
+                                                )
                                         in
                                         ( { model
                                             | player2 = updatePlayer2
                                             , possibleNextMoves = Types.Idle
                                           }
-                                        , [ OutMsg.SendPositionsUpdate model.roomId model.figureColor ( model.player1, updatePlayer2 )
+                                        , [ OutMsg.SendPositionsUpdate model.roomId model.figureColor ( Tuple.first model.player1, Tuple.first updatePlayer2 )
                                           ]
                                         , Cmd.none
                                         )
@@ -265,9 +267,9 @@ update msg model =
                                     )
                                 |> Maybe.map (\f -> ( positionToCapture.figure, f ))
 
-                        updatedPlayer1 : List Types.FigureState
+                        updatedPlayer1 : ( List Types.FigureState, Types.PlayerStatus )
                         updatedPlayer1 =
-                            model.player1
+                            ( Tuple.first model.player1
                                 |> List.filter
                                     (\( pt, { figure, moves } ) ->
                                         case ( positionToCaptureFound, moves |> List.head ) of
@@ -277,10 +279,12 @@ update msg model =
                                             _ ->
                                                 True
                                     )
+                            , Tuple.second model.player1
+                            )
 
-                        updatedPlayer2 : List Types.FigureState
+                        updatedPlayer2 : ( List Types.FigureState, Types.PlayerStatus )
                         updatedPlayer2 =
-                            model.player2
+                            ( Tuple.first model.player2
                                 |> List.map
                                     (\( pt, { figure, moves } ) ->
                                         case ( List.head moves, positionToCaptureFound ) of
@@ -298,6 +302,8 @@ update msg model =
                                             _ ->
                                                 ( pt, { figure = figure, moves = moves } )
                                     )
+                            , Tuple.second model.player2
+                            )
                     in
                     ( { model
                         | possibleNextMoves = Types.Idle
@@ -314,7 +320,7 @@ update msg model =
                     , [ case positionToCaptureFound of
                             Just capture_ ->
                                 [ OutMsg.SendCaptureUpdate model.roomId model.figureColor capture_
-                                , OutMsg.SendPositionsUpdate model.roomId model.figureColor ( updatedPlayer1, updatedPlayer2 )
+                                , OutMsg.SendPositionsUpdate model.roomId model.figureColor ( Tuple.first updatedPlayer1, Tuple.first updatedPlayer2 )
                                 ]
 
                             Nothing ->
@@ -331,9 +337,13 @@ update msg model =
                     )
 
         Types.FeToChess_GotGameData { player1, player2 } whoseMove ->
+            let
+                _ =
+                    Debug.log "UPDATE FROM BE" ( player1.status, player2.status )
+            in
             ( { model
-                | player1 = player1.figures
-                , player2 = player2.figures
+                | player1 = ( player1.figures, player1.status )
+                , player2 = ( player2.figures, player2.status )
                 , player1Captures = player1.captures
                 , player2Captures = player2.captures
                 , whoseMove = whoseMove
@@ -344,7 +354,14 @@ update msg model =
 
         Types.NotYourMove ->
             -- TODO should be a toster notification, check todo list
-            ( { model | error = Just "It's not you move buddy" }, [], Cmd.none )
+            ( { model | error = Just "It's not your move buddy" }, [], Cmd.none )
+
+        Types.AbsentOpponent ->
+            -- TODO should be a toster notification, check todo list
+            ( { model | error = Just "Your opponent is currently absent, you can't make a move" }
+            , []
+            , Cmd.none
+            )
 
 
 findFigureOnThatField : Int -> Int -> List Types.FigureState -> Maybe Types.FigureState
@@ -380,7 +397,7 @@ viewField model xIndex yIndex =
 
         maybeFigure : Maybe Types.Figure
         maybeFigure =
-            coordinatesToFigure xIndex yIndex (List.concat [ model.player1, model.player2 ])
+            coordinatesToFigure xIndex yIndex (List.concat [ Tuple.first model.player1, Tuple.first model.player2 ])
 
         figureEl : Html Msg
         figureEl =
@@ -400,7 +417,7 @@ viewField model xIndex yIndex =
 
         isMyFigure_ : Bool
         isMyFigure_ =
-            isMyFigure xIndex yIndex model.player2
+            isMyFigure xIndex yIndex (Tuple.first model.player2)
 
         isPotenitalCapture : Bool
         isPotenitalCapture =
@@ -425,7 +442,10 @@ viewField model xIndex yIndex =
                 Types.PlayersMove figureColor ->
                     case figureColor of
                         Types.White ->
-                            if model.figureColor == Types.White then
+                            if Tuple.second model.player2 == Types.Freezed then
+                                Types.AbsentOpponent
+
+                            else if model.figureColor == Types.White then
                                 if isMyFigure_ || maybeFigure == Nothing then
                                     Types.InitiateMove position
 
@@ -441,7 +461,10 @@ viewField model xIndex yIndex =
                                 Types.NotYourMove
 
                         Types.Black ->
-                            if model.figureColor == Types.Black then
+                            if Tuple.second model.player2 == Types.Freezed then
+                                Types.AbsentOpponent
+
+                            else if model.figureColor == Types.Black then
                                 if isMyFigure_ || maybeFigure == Nothing then
                                     Types.InitiateMove position
 
@@ -532,11 +555,47 @@ viewColumns model =
         )
 
 
+viewStatus : Model -> Html Msg
+viewStatus model =
+    Html.div
+        [ HA.class "border flex w-[100px] m-2 p-2" ]
+        [ case Tuple.second model.player2 of
+            Types.Active ->
+                Html.div
+                    [ HA.class "flex items-center gap-1" ]
+                    [ Html.div
+                        [ HA.class "rounded-full bg-green-500 w-[8px] h-[8px]" ]
+                        []
+                    , Html.p [] [ Html.text "Active" ]
+                    ]
+
+            Types.Inactive ->
+                Html.div
+                    [ HA.class "flex items-center gap-1" ]
+                    [ Html.div
+                        [ HA.class "rounded-full bg-red-500 w-[8px] h-[8px]" ]
+                        []
+                    , Html.p [] [ Html.text "Inactive" ]
+                    ]
+
+            Types.Freezed ->
+                Html.div
+                    [ HA.class "flex items-center gap-1" ]
+                    [ Html.div
+                        [ HA.class "rounded-full bg-yellow-500 w-[8px] h-[8px]" ]
+                        []
+                    , Html.p [] [ Html.text "Freezed" ]
+                    ]
+        ]
+
+
 view : Model -> Html Msg
 view model =
     Html.div
         [ HA.class "" ]
-        [ case model.figureColor of
+        [ Html.Extra.viewIf (model.whoseMove /= Types.GameIdle)
+            (viewStatus model)
+        , case model.figureColor of
             Types.Black ->
                 Html.div
                     [ HA.class "flex flex-col mb-4" ]
@@ -611,7 +670,7 @@ view model =
 
             Nothing ->
                 Html.text ""
-        , Html.Extra.viewIf (not <| List.isEmpty (List.concat [ model.player1, model.player2 ]))
+        , Html.Extra.viewIf (not <| List.isEmpty (List.concat [ Tuple.first model.player1, Tuple.first model.player2 ]))
             (Html.div [ HA.class "flex justify-center" ]
                 [ viewColumns model ]
             )

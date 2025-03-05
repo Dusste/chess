@@ -233,10 +233,10 @@ isOccupiedFieldsDiagonaly currentField xx yy =
 getNextPossibleMoves :
     Types.Figure
     -> Types.Field
-    -> List Types.FigureState
-    -> List Types.FigureState
+    -> ( List Types.FigureState, Types.PlayerStatus )
+    -> ( List Types.FigureState, Types.PlayerStatus )
     -> Types.NextMoves
-getNextPossibleMoves fg currentField opponent myTeam =
+getNextPossibleMoves fg currentField ( opponent, _ ) ( myTeam, _ ) =
     [ opponent, myTeam ]
         |> List.concat
         |> List.filter

@@ -2,7 +2,9 @@ module Backend exposing (app)
 
 import BackendUtil
 import Dict exposing (Dict)
+import Dict.Extra
 import Lamdera
+import List.Extra
 import Maybe.Extra
 import Tuple2
 import Types
@@ -111,8 +113,7 @@ startPositionPlayer2 =
 init : ( Model, Cmd Types.BackendMsg )
 init =
     ( { -- game = Nothing
-        players = Dict.empty
-      , games = Dict.empty
+        games = Dict.empty
       }
     , Cmd.none
     )
@@ -123,43 +124,93 @@ update msg model =
     case msg of
         Types.UserDisconnected sessionId clientId ->
             let
-                disconnectedGame : List Lamdera.SessionId
-                disconnectedGame =
-                    -- Maybe one (or both players) from game have disconnected - notify both
+                roomIdsInvitee : List { roomId : String, isOwner : Bool }
+                roomIdsInvitee =
+                    -- filter rooms where this sessionId has active game and its invitee
                     model.games
                         |> Dict.filter
-                            (\_ { owner, invitee } ->
-                                Maybe.map2
-                                    (\ownerAsPlayer inviteeAsPlayer ->
-                                        ownerAsPlayer.playersSessionId == sessionId || inviteeAsPlayer.playersSessionId == sessionId
+                            (\roomId { owner, invitee } ->
+                                Maybe.map
+                                    (\inviteeAsPlayer ->
+                                        inviteeAsPlayer.playersSessionId == sessionId
                                     )
-                                    (Just owner)
                                     invitee
                                     |> Maybe.withDefault False
                             )
-                        |> Dict.values
-                        |> List.map
-                            (\{ owner, invitee } ->
-                                case invitee of
-                                    Just invitee_ ->
-                                        [ owner.playersSessionId, invitee_.playersSessionId ]
+                        |> Dict.toList
+                        |> List.map (\t -> { roomId = Tuple.first t, isOwner = False })
 
-                                    Nothing ->
-                                        [ owner.playersSessionId ]
+                roomIdsOwner : List { roomId : String, isOwner : Bool }
+                roomIdsOwner =
+                    -- filter rooms where this sessionId has active game and its owner
+                    model.games
+                        |> Dict.filter
+                            (\roomId { owner, invitee } ->
+                                owner.playersSessionId == sessionId
                             )
-                        |> List.head
-                        |> Maybe.withDefault []
+                        |> Dict.toList
+                        |> List.map (\t -> { roomId = Tuple.first t, isOwner = True })
 
-                _ =
-                    Debug.log "User Disconnected" ( sessionId, clientId )
+                updateGames : Dict String Types.Game
+                updateGames =
+                    -- if user is leaving room where he is owner/invitee, we need to set either Frozen or Inactive
+                    List.concat [ roomIdsInvitee, roomIdsOwner ]
+                        |> List.foldr
+                            (\{ roomId, isOwner } sum ->
+                                sum
+                                    |> Dict.update roomId
+                                        (Maybe.andThen
+                                            (\({ owner, invitee } as game) ->
+                                                let
+                                                    updateInvitee =
+                                                        Maybe.map
+                                                            (\invitee_ ->
+                                                                { invitee_
+                                                                    | status =
+                                                                        case ( isOwner, invitee_.status ) of
+                                                                            ( True, Types.Active ) ->
+                                                                                Types.Freezed
+
+                                                                            ( False, Types.Active ) ->
+                                                                                Types.Inactive
+
+                                                                            _ ->
+                                                                                invitee_.status
+                                                                }
+                                                            )
+                                                            invitee
+
+                                                    updateOwner =
+                                                        { owner
+                                                            | status =
+                                                                case ( isOwner, owner.status ) of
+                                                                    ( True, Types.Active ) ->
+                                                                        Types.Inactive
+
+                                                                    ( False, Types.Active ) ->
+                                                                        Types.Freezed
+
+                                                                    _ ->
+                                                                        owner.status
+                                                        }
+                                                in
+                                                Just { game | owner = updateOwner, invitee = updateInvitee }
+                                            )
+                                        )
+                            )
+                            model.games
             in
-            ( model
-            , disconnectedGame
+            ( { model | games = updateGames }
+            , List.concat
+                [ roomIdsInvitee, roomIdsOwner ]
                 |> List.map
-                    (\sessionId_ ->
-                        Lamdera.sendToFrontend sessionId_
-                            (Types.BeToChess <| Types.ResponseError "Your opponent has left the game")
+                    (\{ roomId } ->
+                        [ Lamdera.sendToFrontend sessionId
+                            (Types.BeToChess <| Types.BeToChessResponse <| Types.Notification "Your opponent has left the game")
+                        , BackendUtil.transformGameToSendToFE updateGames <| BackendUtil.getWhoseMoveMaybeWhite roomId updateGames
+                        ]
                     )
+                |> List.concat
                 |> Cmd.batch
             )
 
@@ -168,11 +219,9 @@ update msg model =
                 _ =
                     Debug.log "User Connected" ( sessionId, clientId )
             in
-            -- Game have owner of the game and invitee - First add owner of a game and starting figures
-            ( model, Cmd.none )
-
-        Types.NoOpBackendMsg ->
-            ( model, Cmd.none )
+            ( model
+            , Cmd.none
+            )
 
 
 updateFromFrontend : Lamdera.SessionId -> Lamdera.ClientId -> Types.ToBackend -> Model -> ( Model, Cmd Types.BackendMsg )
@@ -182,20 +231,86 @@ updateFromFrontend sessionId clientId msg model =
             ( model, Cmd.none )
 
         Types.InitiateGame roomId ->
-            -- Check if you are in persistent game (maybe you've refreshed browser?)
+            -- Check if you are in persistent game (maybe invitee've refreshed browser or left game and then re-joined?)
             case Dict.get roomId model.games of
-                Just gameinProgress ->
-                    case gameinProgress.invitee of
-                        Just invitee_ ->
-                            ( model
-                            , Cmd.batch <|
-                                BackendUtil.toPlayersPerspective
-                                    gameinProgress.whoseMove
-                                    { owner = gameinProgress.owner, invitee = invitee_ }
-                            )
+                Just gameInProgress ->
+                    if gameInProgress.owner.playersSessionId == sessionId then
+                        case gameInProgress.invitee of
+                            Just invitee_ ->
+                                let
+                                    owner_ : Types.Player
+                                    owner_ =
+                                        gameInProgress.owner
 
-                        Nothing ->
-                            ( model, Cmd.none )
+                                    updateOwner : Types.Player
+                                    updateOwner =
+                                        { owner_
+                                            | status =
+                                                case invitee_.status of
+                                                    Types.Active ->
+                                                        Types.Active
+
+                                                    Types.Inactive ->
+                                                        Types.Freezed
+
+                                                    Types.Freezed ->
+                                                        Types.Active
+                                        }
+
+                                    updateInvitee : Types.Player
+                                    updateInvitee =
+                                        { invitee_
+                                            | status =
+                                                case invitee_.status of
+                                                    Types.Freezed ->
+                                                        Types.Active
+
+                                                    _ ->
+                                                        invitee_.status
+                                        }
+
+                                    updateGames : Dict String Types.Game
+                                    updateGames =
+                                        Dict.update roomId
+                                            (Maybe.map
+                                                (\game ->
+                                                    { game
+                                                        | owner = updateOwner
+                                                        , invitee = Just updateInvitee
+                                                    }
+                                                )
+                                            )
+                                            model.games
+                                in
+                                ( { model | games = updateGames }
+                                , Cmd.batch <|
+                                    List.concat <|
+                                        [ BackendUtil.toPlayersPerspective
+                                            gameInProgress.whoseMove
+                                            { owner = updateOwner
+                                            , invitee = updateInvitee
+                                            }
+                                        , [ Lamdera.sendToFrontend
+                                                updateInvitee.playersSessionId
+                                                (Types.BeToChess <|
+                                                    Types.BeToChessResponse <|
+                                                        Types.Notification "Your opponent has re-joined the game"
+                                                )
+                                          ]
+                                        ]
+                                )
+
+                            Nothing ->
+                                ( model
+                                , Lamdera.sendToFrontend sessionId
+                                    (Types.BeToChess <| Types.BeToChessResponse <| Types.Notification "Your opponent never accepted invitation")
+                                )
+
+                    else
+                        ( model
+                        , Lamdera.sendToFrontend sessionId
+                            (Types.BeToChess <| Types.BeToChessResponse <| Types.Error "You are trying to opt-in into a game you are not invited")
+                        )
 
                 Nothing ->
                     ( { model
@@ -205,6 +320,7 @@ updateFromFrontend sessionId clientId msg model =
                                     { playersSessionId = sessionId
                                     , figures = startPositionPlayer2
                                     , captures = []
+                                    , status = Types.Active
                                     }
                                 , invitee = Nothing
                                 , whoseMove = Types.PlayersMove Types.White
@@ -233,6 +349,7 @@ updateFromFrontend sessionId clientId msg model =
                                                             { playersSessionId = sessionId
                                                             , figures = startPositionPlayer1
                                                             , captures = []
+                                                            , status = Types.Active
                                                             }
                                                 }
                                             )
@@ -240,30 +357,90 @@ updateFromFrontend sessionId clientId msg model =
                                         model.games
                             in
                             ( { model | games = updateGames }
-                            , BackendUtil.transformGameToSendToFE updateGames <| Types.PlayersMove Types.White
+                            , BackendUtil.transformGameToSendToFE updateGames <| BackendUtil.getWhoseMoveMaybeWhite roomId updateGames
                             )
                     in
                     case BackendUtil.checkForProblems roomId sessionId model updated of
                         Err err ->
                             ( model
                             , Lamdera.sendToFrontend sessionId
-                                (Types.BeToChess <| Types.ResponseError err)
+                                (Types.BeToChess <| Types.BeToChessResponse <| Types.Error err)
                             )
 
                         Ok updated_ ->
                             updated_
             in
-            -- Check if you are in persistent game (maybe you've refreshed browser?)
+            -- Check if you are in persistent game (maybe invitee've refreshed browser or left game and then re-joined?)
             case Dict.get roomId model.games of
-                Just gameinProgress ->
-                    case gameinProgress.invitee of
+                Just gameInProgress ->
+                    case gameInProgress.invitee of
                         Just invitee_ ->
-                            ( model
-                            , Cmd.batch <|
-                                BackendUtil.toPlayersPerspective
-                                    gameinProgress.whoseMove
-                                    { owner = gameinProgress.owner, invitee = invitee_ }
-                            )
+                            if invitee_.playersSessionId == sessionId then
+                                let
+                                    updateInvitee : Types.Player
+                                    updateInvitee =
+                                        { invitee_
+                                            | status =
+                                                case gameInProgress.owner.status of
+                                                    Types.Active ->
+                                                        Types.Active
+
+                                                    Types.Inactive ->
+                                                        Types.Freezed
+
+                                                    Types.Freezed ->
+                                                        Types.Active
+                                        }
+
+                                    owner_ : Types.Player
+                                    owner_ =
+                                        gameInProgress.owner
+
+                                    updateOwner : Types.Player
+                                    updateOwner =
+                                        { owner_
+                                            | status =
+                                                case owner_.status of
+                                                    Types.Freezed ->
+                                                        Types.Active
+
+                                                    _ ->
+                                                        invitee_.status
+                                        }
+
+                                    updateGames : Dict String Types.Game
+                                    updateGames =
+                                        Dict.update roomId
+                                            (Maybe.map
+                                                (\game ->
+                                                    { game
+                                                        | invitee = Just updateInvitee
+                                                        , owner = updateOwner
+                                                    }
+                                                )
+                                            )
+                                            model.games
+                                in
+                                ( { model | games = updateGames }
+                                , Cmd.batch <|
+                                    List.concat <|
+                                        [ BackendUtil.toPlayersPerspective
+                                            gameInProgress.whoseMove
+                                            { owner = updateOwner, invitee = updateInvitee }
+                                        , [ Lamdera.sendToFrontend updateOwner.playersSessionId
+                                                (Types.BeToChess <|
+                                                    Types.BeToChessResponse <|
+                                                        Types.Notification "Your opponent has re-joined the game"
+                                                )
+                                          ]
+                                        ]
+                                )
+
+                            else
+                                ( model
+                                , Lamdera.sendToFrontend sessionId
+                                    (Types.BeToChess <| Types.BeToChessResponse <| Types.Error "You are trying to opt-in into a game you are not invited")
+                                )
 
                         Nothing ->
                             -- Not started game should have roomId but not invitee

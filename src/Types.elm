@@ -89,8 +89,8 @@ type alias NextMoves =
 
 
 type alias ChessModel =
-    { player1 : List FigureState
-    , player2 : List FigureState
+    { player1 : ( List FigureState, PlayerStatus )
+    , player2 : ( List FigureState, PlayerStatus )
     , possibleNextMoves : PossibleNextMove
     , figureColor : FigureColor
     , error : Maybe String
@@ -131,11 +131,8 @@ type Page
 
 
 type alias BackendModel =
-    { -- game : Maybe ( List Chess.FigureState, List Chess.FigureState )
-      players : Dict Lamdera.SessionId (List FigureState)
-
-    --   games is dict of Owner and maybe Invitee, comprises of sessionId, figures and captures
-    , games : Dict String Game
+    { --   games is dict of Owner and maybe Invitee, comprises of sessionId, figures and captures
+      games : Dict String Game
     }
 
 
@@ -155,6 +152,7 @@ type alias GameFE =
 type alias PlayerFe =
     { figures : List FigureState
     , captures : List ( Figure, Field )
+    , status : PlayerStatus
     }
 
 
@@ -162,7 +160,14 @@ type alias Player =
     { playersSessionId : Lamdera.SessionId
     , figures : List FigureState
     , captures : List ( Figure, Field )
+    , status : PlayerStatus
     }
+
+
+type PlayerStatus
+    = Freezed -- opponent left the game
+    | Active -- in the game
+    | Inactive --left the game
 
 
 type ToFrontend
@@ -173,7 +178,12 @@ type ToFrontend
 
 type BeToChess
     = GameCurrentState GameFE WhoseMove
-    | ResponseError String
+    | BeToChessResponse TypeOfResponse
+
+
+type TypeOfResponse
+    = Notification String
+    | Error String
 
 
 type ToBackend
@@ -187,7 +197,6 @@ type ToBackend
 type BackendMsg
     = UserConnected Lamdera.SessionId Lamdera.ClientId
     | UserDisconnected Lamdera.SessionId Lamdera.ClientId
-    | NoOpBackendMsg
 
 
 type FrontendMsg
@@ -210,3 +219,4 @@ type ChessMsg
     | CopyRoomUrl
     | FeToChess_GotGameData GameFE WhoseMove
     | NotYourMove
+    | AbsentOpponent

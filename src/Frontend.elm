@@ -292,8 +292,13 @@ updateFromBackend msg model =
                     , cmd
                     )
 
-                Types.ResponseError error ->
-                    ( model, Cmd.none )
+                Types.BeToChessResponse typeOfResponse ->
+                    case typeOfResponse of
+                        Types.Notification str ->
+                            ( model, Cmd.none )
+
+                        Types.Error str ->
+                            ( model, Cmd.none )
 
 
 view : Model -> Browser.Document Types.FrontendMsg
