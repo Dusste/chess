@@ -242,32 +242,25 @@ updateFromFrontend sessionId clientId msg model =
                                     owner_ =
                                         gameInProgress.owner
 
+                                    updateStatus : Types.PlayerStatus
+                                    updateStatus =
+                                        case invitee_.status of
+                                            Types.Inactive ->
+                                                Types.Freezed
+
+                                            Types.Freezed ->
+                                                Types.Active
+
+                                            _ ->
+                                                invitee_.status
+
                                     updateOwner : Types.Player
                                     updateOwner =
-                                        { owner_
-                                            | status =
-                                                case invitee_.status of
-                                                    Types.Active ->
-                                                        Types.Active
-
-                                                    Types.Inactive ->
-                                                        Types.Freezed
-
-                                                    Types.Freezed ->
-                                                        Types.Active
-                                        }
+                                        { owner_ | status = updateStatus }
 
                                     updateInvitee : Types.Player
                                     updateInvitee =
-                                        { invitee_
-                                            | status =
-                                                case invitee_.status of
-                                                    Types.Freezed ->
-                                                        Types.Active
-
-                                                    _ ->
-                                                        invitee_.status
-                                        }
+                                        { invitee_ | status = updateStatus }
 
                                     updateGames : Dict String Types.Game
                                     updateGames =
@@ -377,20 +370,21 @@ updateFromFrontend sessionId clientId msg model =
                         Just invitee_ ->
                             if invitee_.playersSessionId == sessionId then
                                 let
+                                    updateStatus : Types.PlayerStatus
+                                    updateStatus =
+                                        case gameInProgress.owner.status of
+                                            Types.Inactive ->
+                                                Types.Freezed
+
+                                            Types.Freezed ->
+                                                Types.Active
+
+                                            _ ->
+                                                gameInProgress.owner.status
+
                                     updateInvitee : Types.Player
                                     updateInvitee =
-                                        { invitee_
-                                            | status =
-                                                case gameInProgress.owner.status of
-                                                    Types.Active ->
-                                                        Types.Active
-
-                                                    Types.Inactive ->
-                                                        Types.Freezed
-
-                                                    Types.Freezed ->
-                                                        Types.Active
-                                        }
+                                        { invitee_ | status = updateStatus }
 
                                     owner_ : Types.Player
                                     owner_ =
@@ -398,15 +392,7 @@ updateFromFrontend sessionId clientId msg model =
 
                                     updateOwner : Types.Player
                                     updateOwner =
-                                        { owner_
-                                            | status =
-                                                case owner_.status of
-                                                    Types.Freezed ->
-                                                        Types.Active
-
-                                                    _ ->
-                                                        invitee_.status
-                                        }
+                                        { owner_ | status = updateStatus }
 
                                     updateGames : Dict String Types.Game
                                     updateGames =
