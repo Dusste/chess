@@ -253,7 +253,7 @@ update msg model =
                             , Cmd.none
                             )
 
-        Types.InitiateCapture positionToCapture ->
+        Types.InitiateCapture positionIntendedToCapture ->
             case model.possibleNextMoves of
                 Types.NextMove attackerCurrentField { potentialCaptures } ->
                     let
@@ -263,9 +263,12 @@ update msg model =
                             potentialCaptures
                                 |> List.Extra.find
                                     (\f ->
-                                        Util.isEqualPosition f.x positionToCapture.x f.y positionToCapture.y
+                                        Util.isEqualPosition f.x positionIntendedToCapture.x f.y positionIntendedToCapture.y
+                                            -- you can't capture king
+                                            && positionIntendedToCapture.figure
+                                            /= Types.King
                                     )
-                                |> Maybe.map (\f -> ( positionToCapture.figure, f ))
+                                |> Maybe.map (\f -> ( positionIntendedToCapture.figure, f ))
 
                         updatedPlayer1 : ( List Types.FigureState, Types.PlayerStatus )
                         updatedPlayer1 =
@@ -337,10 +340,6 @@ update msg model =
                     )
 
         Types.FeToChess_GotGameData { player1, player2 } whoseMove ->
-            let
-                _ =
-                    Debug.log "UPDATE FROM BE" ( player1.status, player2.status )
-            in
             ( { model
                 | player1 = ( player1.figures, player1.status )
                 , player2 = ( player2.figures, player2.status )
@@ -419,6 +418,27 @@ viewField model xIndex yIndex =
         isMyFigure_ =
             isMyFigure xIndex yIndex (Tuple.first model.player2)
 
+        figureBackgroundColor : String
+        figureBackgroundColor =
+            findFigureOnThatField xIndex yIndex (List.concat [ Tuple.first model.player1, Tuple.first model.player2 ])
+                |> Maybe.map
+                    (\( pt, _ ) ->
+                        case ( pt, model.figureColor ) of
+                            -- TODO its confusing
+                            ( Types.Me, Types.Black ) ->
+                                " bg-black text-white"
+
+                            ( Types.Opponent, Types.Black ) ->
+                                " bg-white text-black"
+
+                            ( Types.Me, Types.White ) ->
+                                " bg-white text-black"
+
+                            ( Types.Opponent, Types.White ) ->
+                                " bg-black text-white"
+                    )
+                |> Maybe.withDefault ""
+
         isPotenitalCapture : Bool
         isPotenitalCapture =
             case model.possibleNextMoves of
@@ -490,7 +510,7 @@ viewField model xIndex yIndex =
                         " bg-red-500"
 
                     else
-                        ""
+                        figureBackgroundColor
                    )
                 ++ (case getPossitionOfActiveFigure model.possibleNextMoves of
                         Just { x, y } ->
@@ -509,7 +529,7 @@ viewField model xIndex yIndex =
             [ figureEl ]
         , if yIndex == 8 then
             Html.div
-                [ HA.class "absolute bottom-[-30px] left-[45%]" ]
+                [ HA.class "absolute bottom-[-30px] left-[45%] text-white" ]
                 [ Html.text letter ]
 
           else
@@ -530,7 +550,7 @@ viewRows model colNum =
                     9 - colNum
     in
     Html.div
-        [ HA.class "flex flex-row" ]
+        [ HA.class "flex flex-row bg-yellow-200" ]
         (List.append
             (List.repeat number_of_rows (viewField model)
                 |> List.indexedMap
@@ -539,7 +559,7 @@ viewRows model colNum =
                     )
             )
             [ Html.div
-                [ HA.class "flex self-center" ]
+                [ HA.class "flex self-center text-black" ]
                 [ Html.text <| String.fromInt sideTableNum ]
             ]
         )

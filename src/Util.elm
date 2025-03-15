@@ -276,22 +276,8 @@ getNextPossibleMoves fg currentField ( opponent, _ ) ( myTeam, _ ) =
                                         || isOccupiedFieldsXY currentField f.x f.y
 
                                 Types.King ->
-                                    --top
-                                    (currentField.y - f.y == 1 && currentField.x == f.x)
-                                        || --bottom
-                                           (f.y - currentField.y == 1 && f.x == currentField.x)
-                                        -- left
-                                        || (currentField.x - f.x == 1 && currentField.y == f.y)
-                                        -- right
-                                        || (f.x - currentField.x == 1 && f.y == currentField.y)
-                                        -- top/right
-                                        || (currentField.x + 1 == f.x && currentField.y - 1 == f.y)
-                                        -- top/left
-                                        || (currentField.x - 1 == f.x && currentField.y - 1 == f.y)
-                                        -- bottom/right
-                                        || (currentField.x + 1 == f.x && currentField.y + 1 == f.y)
-                                        -- bottom/left
-                                        || (currentField.x - 1 == f.x && currentField.y + 1 == f.y)
+                                    --Due to special logic for capture and move we need to let every figure pass
+                                    True
                         )
                     |> Maybe.withDefault False
             )
@@ -299,7 +285,7 @@ getNextPossibleMoves fg currentField ( opponent, _ ) ( myTeam, _ ) =
             (\( pt, fs ) ->
                 fs.moves
                     |> List.head
-                    |> Maybe.map (\f -> ( pt, f ))
+                    |> Maybe.map (\f -> ( fs.figure, pt, f ))
             )
         |> List.filterMap identity
         |> (\figuresLst ->
@@ -308,27 +294,27 @@ getNextPossibleMoves fg currentField ( opponent, _ ) ( myTeam, _ ) =
                         List.foldr
                             (\curr sumTuple ->
                                 case curr of
-                                    ( Types.Opponent, fld ) ->
+                                    ( figure, Types.Opponent, fld ) ->
                                         sumTuple
-                                            |> Tuple.mapFirst ((::) fld)
+                                            |> Tuple.mapFirst ((::) ( figure, fld ))
 
-                                    ( Types.Me, fld ) ->
+                                    ( figure, Types.Me, fld ) ->
                                         sumTuple
-                                            |> Tuple.mapSecond ((::) fld)
+                                            |> Tuple.mapSecond ((::) ( figure, fld ))
                             )
                             ( [], [] )
                             figuresLst
                 in
                 case fg of
                     Types.Pawn ->
-                        getAllPossibleMovesPawn currentField figuresLst
+                        getAllPossibleMovesPawn False currentField figuresLst
 
                     Types.Rook ->
                         getAllPossibleXYMoves currentField figuresLst
 
                     Types.Knight ->
                         { potentialMoves = getAllPossibleMovesForKnight currentField (List.concat [ opponentsLst, myFiguresLst ])
-                        , potentialCaptures = opponentsLst
+                        , potentialCaptures = opponentsLst |> List.map Tuple.second
                         }
 
                     Types.Bishop ->
@@ -338,12 +324,36 @@ getNextPossibleMoves fg currentField ( opponent, _ ) ( myTeam, _ ) =
                         getAllPossibleMovesForQueen currentField figuresLst
 
                     Types.King ->
-                        getAllPossibleMovesKing currentField opponentsLst myFiguresLst
+                        getAllPossibleMovesKing currentField opponentsLst myFiguresLst figuresLst
            )
 
 
-getAllPossibleMovesKing : Types.Field -> List Types.Field -> List Types.Field -> Types.NextMoves
-getAllPossibleMovesKing myPosition opponentsLst myFiguresLst =
+getAllPossibleMovesKing : Types.Field -> List ( Types.Figure, Types.Field ) -> List ( Types.Figure, Types.Field ) -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> Types.NextMoves
+getAllPossibleMovesKing myPosition opponentsLst myFiguresLst allFiguresLst =
+    let
+        opponentsLstThatArePotentialCaptures : List Types.Field
+        opponentsLstThatArePotentialCaptures =
+            opponentsLst
+                |> List.filter
+                    (\( _, opponentField ) ->
+                        (myPosition.y - opponentField.y == 1 && myPosition.x == opponentField.x)
+                            || --bottom
+                               (opponentField.y - myPosition.y == 1 && opponentField.x == myPosition.x)
+                            -- left
+                            || (myPosition.x - opponentField.x == 1 && myPosition.y == opponentField.y)
+                            -- right
+                            || (opponentField.x - myPosition.x == 1 && opponentField.y == myPosition.y)
+                            -- top/right
+                            || (myPosition.x + 1 == opponentField.x && myPosition.y - 1 == opponentField.y)
+                            -- top/left
+                            || (myPosition.x - 1 == opponentField.x && myPosition.y - 1 == opponentField.y)
+                            -- bottom/right
+                            || (myPosition.x + 1 == opponentField.x && myPosition.y + 1 == opponentField.y)
+                            -- bottom/left
+                            || (myPosition.x - 1 == opponentField.x && myPosition.y + 1 == opponentField.y)
+                    )
+                |> List.map Tuple.second
+    in
     [ { x = myPosition.x, y = myPosition.y - 1 }
     , { x = myPosition.x, y = myPosition.y + 1 }
     , { x = myPosition.x - 1, y = myPosition.y }
@@ -353,40 +363,168 @@ getAllPossibleMovesKing myPosition opponentsLst myFiguresLst =
     , { x = myPosition.x + 1, y = myPosition.y - 1 }
     , { x = myPosition.x - 1, y = myPosition.y + 1 }
     ]
-        |> List.filter
-            (\field ->
-                List.concat [ opponentsLst, myFiguresLst ]
-                    |> List.Extra.find (\f -> f == field)
-                    |> Maybe.map (\_ -> False)
-                    |> Maybe.withDefault True
+        |> List.foldr
+            (\field sum ->
+                let
+                    isMyFigureOnPotentialNextField =
+                        List.member field (myFiguresLst |> List.map (\( _, f ) -> f))
+
+                    unavailableMoves : List ( Types.Figure, Types.PlayerType, Types.Field )
+                    unavailableMoves =
+                        if List.concat [ myFiguresLst ] |> List.filter (\( _, f ) -> isEqualPosition f.x field.x f.y field.y) |> List.isEmpty then
+                            allFiguresLst
+                                |> List.foldr
+                                    (\( currentFigure, pt, currentField ) sum_ ->
+                                        case pt of
+                                            Types.Opponent ->
+                                                case currentFigure of
+                                                    Types.Pawn ->
+                                                        if
+                                                            (currentField.y + field.y == 1 && currentField.x == field.x)
+                                                                -- top/right
+                                                                || (currentField.x + 1 == field.x && currentField.y + 1 == field.y)
+                                                                -- top/left
+                                                                || (currentField.x - 1 == field.x && currentField.y + 1 == field.y)
+                                                        then
+                                                            getAllPossibleMovesPawn True currentField [ ( Types.King, Types.Opponent, field ) ]
+                                                                |> .potentialCaptures
+                                                                |> List.Extra.find
+                                                                    (\f_ -> f_ == field)
+                                                                |> Maybe.map (\field_ -> ( currentFigure, pt, field_ ) :: sum_)
+                                                                |> Maybe.withDefault sum_
+
+                                                        else
+                                                            sum_
+
+                                                    Types.Rook ->
+                                                        getAllPossibleXYMoves currentField (( Types.King, Types.Opponent, field ) :: allFiguresLst)
+                                                            |> .potentialCaptures
+                                                            |> List.Extra.find
+                                                                (\f_ -> f_ == field)
+                                                            |> Maybe.map (\field_ -> ( currentFigure, pt, field_ ) :: sum_)
+                                                            |> Maybe.withDefault sum_
+
+                                                    Types.Knight ->
+                                                        ((currentField.x + 1 == field.x || currentField.x - 1 == field.x) && currentField.y - 2 == field.y)
+                                                            -- down left/right
+                                                            || ((currentField.x + 1 == field.x || currentField.x - 1 == field.x) && currentField.y + 2 == field.y)
+                                                            -- left up/bottom
+                                                            || ((currentField.y + 1 == field.y || currentField.y - 1 == field.y) && currentField.x - 2 == field.x)
+                                                            || -- right up/bottom
+                                                               ((currentField.y + 1 == field.y || currentField.y - 1 == field.y) && currentField.x + 2 == field.x)
+                                                            |> (\isTrue ->
+                                                                    if isTrue then
+                                                                        ( currentFigure, pt, field ) :: sum_
+
+                                                                    else
+                                                                        sum_
+                                                               )
+
+                                                    Types.Bishop ->
+                                                        getAllPossibleDiagonalMoves currentField (( Types.King, Types.Opponent, field ) :: allFiguresLst)
+                                                            |> .potentialCaptures
+                                                            |> List.Extra.find
+                                                                (\f_ -> f_ == field)
+                                                            |> Maybe.map (\field_ -> ( currentFigure, pt, field_ ) :: sum_)
+                                                            |> Maybe.withDefault sum_
+
+                                                    Types.Queen ->
+                                                        getAllPossibleMovesForQueen currentField (( Types.King, Types.Opponent, field ) :: allFiguresLst)
+                                                            |> .potentialCaptures
+                                                            |> List.Extra.find
+                                                                (\f_ -> f_ == field)
+                                                            |> Maybe.map (\field_ -> ( currentFigure, pt, field_ ) :: sum_)
+                                                            |> Maybe.withDefault sum_
+
+                                                    Types.King ->
+                                                        if pt == Types.Opponent then
+                                                            (currentField.y - field.y == 1 && currentField.x == field.x)
+                                                                || --bottom
+                                                                   (field.y - currentField.y == 1 && field.x == currentField.x)
+                                                                -- left
+                                                                || (currentField.x - field.x == 1 && currentField.y == field.y)
+                                                                -- right
+                                                                || (field.x - currentField.x == 1 && field.y == currentField.y)
+                                                                -- top/right
+                                                                || (currentField.x + 1 == field.x && currentField.y - 1 == field.y)
+                                                                -- top/left
+                                                                || (currentField.x - 1 == field.x && currentField.y - 1 == field.y)
+                                                                -- bottom/right
+                                                                || (currentField.x + 1 == field.x && currentField.y + 1 == field.y)
+                                                                -- bottom/left
+                                                                || (currentField.x - 1 == field.x && currentField.y + 1 == field.y)
+                                                                |> (\isTrue ->
+                                                                        if isTrue then
+                                                                            ( currentFigure, pt, field ) :: sum_
+
+                                                                        else
+                                                                            sum_
+                                                                   )
+
+                                                        else
+                                                            sum_
+
+                                            Types.Me ->
+                                                sum_
+                                    )
+                                    []
+
+                        else
+                            []
+                in
+                if List.member field (unavailableMoves |> List.map (\( _, _, f ) -> f)) then
+                    { sum
+                        | potentialCaptures =
+                            List.filter (\f_ -> f_ /= field) sum.potentialCaptures
+                    }
+
+                else if not isMyFigureOnPotentialNextField then
+                    { sum | potentialMoves = field :: sum.potentialMoves }
+
+                else
+                    sum
             )
-        |> (\possibleMoves ->
-                { potentialMoves = possibleMoves
-                , potentialCaptures = opponentsLst
-                }
-           )
+            { potentialMoves = []
+            , potentialCaptures = opponentsLstThatArePotentialCaptures
+            }
 
 
-getAllPossibleMovesPawn : Types.Field -> List ( Types.PlayerType, Types.Field ) -> Types.NextMoves
-getAllPossibleMovesPawn myPosition figuresLst =
+getAllPossibleMovesPawn : Bool -> Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> Types.NextMoves
+getAllPossibleMovesPawn reverseDirection myPosition figuresLst =
+    -- `reverse` to make it work for preventing King from moving to unavailable field
     let
         inFrontOfMe : Types.Field
         inFrontOfMe =
-            { x = myPosition.x, y = myPosition.y - 1 }
+            { x = myPosition.x
+            , y =
+                if reverseDirection then
+                    myPosition.y + 1
+
+                else
+                    myPosition.y - 1
+            }
 
         transformFigures : List ( Maybe Types.PlayerType, Types.Field )
         transformFigures =
             -- Transform figures so player type can be maybe
             -- giving opportunity to include potential move forward as playerType Nothing
-            figuresLst |> List.map (\( ft, f ) -> ( Just ft, f ))
+            figuresLst |> List.map (\( _, ft, f ) -> ( Just ft, f ))
     in
     figuresLst
         |> List.Extra.find
-            (\( _, f ) ->
-                isEqualPosition f.x myPosition.x f.y (myPosition.y - 1)
+            (\( _, _, f ) ->
+                isEqualPosition f.x
+                    myPosition.x
+                    f.y
+                    (if reverseDirection then
+                        myPosition.y + 1
+
+                     else
+                        myPosition.y - 1
+                    )
             )
         |> Maybe.map
-            (\( _, f_ ) ->
+            (\( _, _, f_ ) ->
                 transformFigures
                     |> List.filter
                         (\( _, f1 ) ->
@@ -411,10 +549,10 @@ getAllPossibleMovesPawn myPosition figuresLst =
             (Types.NextMoves [] [])
 
 
-getAllPossibleXYMoves : Types.Field -> List ( Types.PlayerType, Types.Field ) -> Types.NextMoves
+getAllPossibleXYMoves : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> Types.NextMoves
 getAllPossibleXYMoves myPosition figureLst =
     let
-        fromMeToTop : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToTop : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToTop currentField lst =
             --go up -> lower number
             let
@@ -430,9 +568,9 @@ getAllPossibleXYMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -447,7 +585,7 @@ getAllPossibleXYMoves myPosition figureLst =
             else
                 []
 
-        fromMeToBottom : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToBottom : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToBottom currentField lst =
             --go down -> bigger number
             let
@@ -463,9 +601,9 @@ getAllPossibleXYMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -480,7 +618,7 @@ getAllPossibleXYMoves myPosition figureLst =
             else
                 []
 
-        fromMeToLeft : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToLeft : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToLeft currentField lst =
             --go left -> lower number
             let
@@ -496,9 +634,9 @@ getAllPossibleXYMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -513,7 +651,7 @@ getAllPossibleXYMoves myPosition figureLst =
             else
                 []
 
-        fromMeToRight : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToRight : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToRight currentField lst =
             --go right -> bigger number
             let
@@ -529,9 +667,9 @@ getAllPossibleXYMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -635,10 +773,10 @@ getAllPossibleXYMoves myPosition figureLst =
     }
 
 
-getAllPossibleMovesForKnight : Types.Field -> List Types.Field -> List Types.Field
+getAllPossibleMovesForKnight : Types.Field -> List ( Types.Figure, Types.Field ) -> List Types.Field
 getAllPossibleMovesForKnight myPosition positionsOfOtherFigures =
     let
-        fromMeToTop : Types.Field -> List Types.Field -> List Types.Field
+        fromMeToTop : Types.Field -> List ( Types.Figure, Types.Field ) -> List Types.Field
         fromMeToTop currentField lst =
             --go up -> lower number
             let
@@ -655,14 +793,14 @@ getAllPossibleMovesForKnight myPosition positionsOfOtherFigures =
                 (\f ->
                     lst
                         |> List.any
-                            (\f1 ->
+                            (\( _, f1 ) ->
                                 isEqualPosition f.x f1.x f.y f1.y
                             )
                         |> not
                 )
                 nextFields
 
-        fromMeToBottom : Types.Field -> List Types.Field -> List Types.Field
+        fromMeToBottom : Types.Field -> List ( Types.Figure, Types.Field ) -> List Types.Field
         fromMeToBottom currentField lst =
             --go down -> bigger number
             let
@@ -679,14 +817,14 @@ getAllPossibleMovesForKnight myPosition positionsOfOtherFigures =
                 (\f ->
                     lst
                         |> List.any
-                            (\f1 ->
+                            (\( _, f1 ) ->
                                 isEqualPosition f.x f1.x f.y f1.y
                             )
                         |> not
                 )
                 nextFields
 
-        fromMeToLeft : Types.Field -> List Types.Field -> List Types.Field
+        fromMeToLeft : Types.Field -> List ( Types.Figure, Types.Field ) -> List Types.Field
         fromMeToLeft currentField lst =
             --go left -> lower number
             let
@@ -703,14 +841,14 @@ getAllPossibleMovesForKnight myPosition positionsOfOtherFigures =
                 (\f ->
                     lst
                         |> List.any
-                            (\f1 ->
+                            (\( _, f1 ) ->
                                 isEqualPosition f.x f1.x f.y f1.y
                             )
                         |> not
                 )
                 nextFields
 
-        fromMeToRight : Types.Field -> List Types.Field -> List Types.Field
+        fromMeToRight : Types.Field -> List ( Types.Figure, Types.Field ) -> List Types.Field
         fromMeToRight currentField lst =
             --go right -> bigger number
             let
@@ -727,7 +865,7 @@ getAllPossibleMovesForKnight myPosition positionsOfOtherFigures =
                 (\f ->
                     lst
                         |> List.any
-                            (\f1 ->
+                            (\( _, f1 ) ->
                                 isEqualPosition f.x f1.x f.y f1.y
                             )
                         |> not
@@ -742,10 +880,10 @@ getAllPossibleMovesForKnight myPosition positionsOfOtherFigures =
         ]
 
 
-getAllPossibleDiagonalMoves : Types.Field -> List ( Types.PlayerType, Types.Field ) -> Types.NextMoves
+getAllPossibleDiagonalMoves : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> Types.NextMoves
 getAllPossibleDiagonalMoves myPosition figureLst =
     let
-        fromMeToTopRight : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToTopRight : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToTopRight currentField lst =
             --go up/right -> lower y, bigger x
             let
@@ -761,9 +899,9 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -778,7 +916,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
             else
                 []
 
-        fromMeToBottomRight : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToBottomRight : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToBottomRight currentField lst =
             --go bottom/right -> bigger y, bigger x
             let
@@ -794,9 +932,9 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -811,7 +949,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
             else
                 []
 
-        fromMeToTopLeft : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToTopLeft : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToTopLeft currentField lst =
             --go top/left -> bigger y, smaller x
             let
@@ -827,9 +965,9 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -844,7 +982,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
             else
                 []
 
-        fromMeToBottomLeft : Types.Field -> List ( Types.PlayerType, Types.Field ) -> List Types.Move
+        fromMeToBottomLeft : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> List Types.Move
         fromMeToBottomLeft currentField lst =
             --go top/left -> bigger y, smaller x
             let
@@ -860,9 +998,9 @@ getAllPossibleDiagonalMoves myPosition figureLst =
                 case
                     lst
                         |> List.Extra.find
-                            (\( pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
+                            (\( _, pt, f ) -> isEqualPosition nextField.x f.x nextField.y f.y)
                 of
-                    Just ( pt, f ) ->
+                    Just ( _, pt, f ) ->
                         -- closest figure found -> we care only for opponent
                         case pt of
                             Types.Opponent ->
@@ -966,7 +1104,7 @@ getAllPossibleDiagonalMoves myPosition figureLst =
     }
 
 
-getAllPossibleMovesForQueen : Types.Field -> List ( Types.PlayerType, Types.Field ) -> Types.NextMoves
+getAllPossibleMovesForQueen : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> Types.NextMoves
 getAllPossibleMovesForQueen myPosition figureLst =
     let
         xyMoves : Types.NextMoves
