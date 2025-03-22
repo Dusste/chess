@@ -267,7 +267,7 @@ updateFromBackend msg model =
 
         Types.BeToChess toChessMsg ->
             case toChessMsg of
-                Types.GameCurrentState game whoseMove ->
+                Types.GameCurrentState game whoseMove isKingInChessPosition ->
                     let
                         ( updatedPage, cmd ) =
                             -- TODO find better way to update Chess
@@ -276,7 +276,7 @@ updateFromBackend msg model =
                                 Types.ChessPage mainModel ->
                                     let
                                         ( model_, _, cmds_ ) =
-                                            Chess.update (Types.FeToChess_GotGameData game whoseMove) mainModel
+                                            Chess.update (Types.FeToChess_GotGameData game whoseMove isKingInChessPosition) mainModel
                                     in
                                     ( Types.ChessPage model_
                                     , Cmd.map Types.GotChessPageMsg cmds_

@@ -1,5 +1,6 @@
 module Util exposing (..)
 
+import BackendUtil
 import Dict exposing (Dict)
 import Json.Decode
 import List.Extra
@@ -11,6 +12,16 @@ import Url exposing (Url)
 subscribeOnTimestamp : (Int -> msg) -> Sub msg
 subscribeOnTimestamp toMsg =
     Ports.onTimestamp (\val -> toMsg (decodeInt val))
+
+
+getFigureBasedOnField : Int -> Int -> List Types.FigureState -> Maybe Types.Figure
+getFigureBasedOnField x y lst =
+    lst
+        |> List.Extra.find
+            (\( _, { moves } ) ->
+                List.head moves == Just (Types.Field x y)
+            )
+        |> Maybe.map (Tuple.second >> .figure)
 
 
 mapToFigureColor : Maybe String -> Maybe Types.FigureColor
@@ -35,6 +46,63 @@ decodeInt val =
 
         Nothing ->
             0
+
+
+{-| -- Is any opponent giving chess to my king AFTER I moved ?
+-- If so, I can't move, I need to move king, capture opponent or stand in front of opp
+-}
+numberOfFiguresThatThreatToKing : ( List Types.FigureState, Types.PlayerStatus ) -> ( List Types.FigureState, Types.PlayerStatus ) -> List Types.Figure
+numberOfFiguresThatThreatToKing opponent me =
+    let
+        convertPlayer : ( List Types.FigureState, Types.PlayerStatus )
+        convertPlayer =
+            -- we just switch from `Me` to `Opponent` and mirror fields
+            me
+                |> Tuple.mapFirst BackendUtil.convertRoles
+    in
+    opponent
+        |> Tuple.first
+        |> List.foldr
+            (\( pt, { figure, moves } ) sum ->
+                case List.head moves of
+                    Just field ->
+                        let
+                            isKingStillInChess : Bool
+                            isKingStillInChess =
+                                -- We need to turn perspective upside down, not just role switch, but to mirror moves
+                                getNextPossibleMoves
+                                    Types.Me
+                                    figure
+                                    { x = BackendUtil.coordinateInMirror field.x, y = BackendUtil.coordinateInMirror field.y }
+                                    convertPlayer
+                                    ( [ ( Types.Me
+                                        , { figure = figure
+                                          , moves =
+                                                [ { x = BackendUtil.coordinateInMirror field.x
+                                                  , y = BackendUtil.coordinateInMirror field.y
+                                                  }
+                                                ]
+                                          }
+                                        )
+                                      ]
+                                    , Types.Active
+                                    )
+                                    |> .potentialCaptures
+                                    |> List.filter
+                                        (\f -> getFigureBasedOnField f.x f.y (Tuple.first convertPlayer) == Just Types.King)
+                                    |> List.length
+                                    |> (/=) 0
+                        in
+                        if isKingStillInChess then
+                            figure :: sum
+
+                        else
+                            sum
+
+                    Nothing ->
+                        sum
+            )
+            []
 
 
 isEqualPosition : Int -> Int -> Int -> Int -> Bool
@@ -231,12 +299,13 @@ isOccupiedFieldsDiagonaly currentField xx yy =
 
 
 getNextPossibleMoves :
-    Types.Figure
+    Types.PlayerType
+    -> Types.Figure
     -> Types.Field
     -> ( List Types.FigureState, Types.PlayerStatus )
     -> ( List Types.FigureState, Types.PlayerStatus )
     -> Types.NextMoves
-getNextPossibleMoves fg currentField ( opponent, _ ) ( myTeam, _ ) =
+getNextPossibleMoves playerType fg currentField ( opponent, _ ) ( myTeam, _ ) =
     [ opponent, myTeam ]
         |> List.concat
         |> List.filter
@@ -307,7 +376,7 @@ getNextPossibleMoves fg currentField ( opponent, _ ) ( myTeam, _ ) =
                 in
                 case fg of
                     Types.Pawn ->
-                        getAllPossibleMovesPawn False currentField figuresLst
+                        getAllPossibleMovesPawn currentField figuresLst
 
                     Types.Rook ->
                         getAllPossibleXYMoves currentField figuresLst
@@ -386,7 +455,7 @@ getAllPossibleMovesKing myPosition opponentsLst myFiguresLst allFiguresLst =
                                                                 -- top/left
                                                                 || (currentField.x - 1 == field.x && currentField.y + 1 == field.y)
                                                         then
-                                                            getAllPossibleMovesPawn True currentField [ ( Types.King, Types.Opponent, field ) ]
+                                                            getAllPossibleMovesPawn currentField [ ( Types.King, Types.Opponent, field ) ]
                                                                 |> .potentialCaptures
                                                                 |> List.Extra.find
                                                                     (\f_ -> f_ == field)
@@ -478,7 +547,7 @@ getAllPossibleMovesKing myPosition opponentsLst myFiguresLst allFiguresLst =
                             List.filter (\f_ -> f_ /= field) sum.potentialCaptures
                     }
 
-                else if not isMyFigureOnPotentialNextField then
+                else if not isMyFigureOnPotentialNextField && (not <| List.member field sum.potentialCaptures) then
                     { sum | potentialMoves = field :: sum.potentialMoves }
 
                 else
@@ -489,19 +558,14 @@ getAllPossibleMovesKing myPosition opponentsLst myFiguresLst allFiguresLst =
             }
 
 
-getAllPossibleMovesPawn : Bool -> Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> Types.NextMoves
-getAllPossibleMovesPawn reverseDirection myPosition figuresLst =
+getAllPossibleMovesPawn : Types.Field -> List ( Types.Figure, Types.PlayerType, Types.Field ) -> Types.NextMoves
+getAllPossibleMovesPawn myPosition figuresLst =
     -- `reverse` to make it work for preventing King from moving to unavailable field
     let
         inFrontOfMe : Types.Field
         inFrontOfMe =
             { x = myPosition.x
-            , y =
-                if reverseDirection then
-                    myPosition.y + 1
-
-                else
-                    myPosition.y - 1
+            , y = myPosition.y - 1
             }
 
         transformFigures : List ( Maybe Types.PlayerType, Types.Field )
@@ -516,12 +580,7 @@ getAllPossibleMovesPawn reverseDirection myPosition figuresLst =
                 isEqualPosition f.x
                     myPosition.x
                     f.y
-                    (if reverseDirection then
-                        myPosition.y + 1
-
-                     else
-                        myPosition.y - 1
-                    )
+                    (myPosition.y - 1)
             )
         |> Maybe.map
             (\( _, _, f_ ) ->

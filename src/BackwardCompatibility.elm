@@ -132,6 +132,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 5, y = 5 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Queen
                                         { x = 5, y = 5 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -144,6 +145,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 2, y = 8 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Queen
                                         { x = 2, y = 8 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -156,6 +158,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 7, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Queen
                                         { x = 7, y = 3 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -183,6 +186,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 5, y = 6 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.King
                                         { x = 5, y = 6 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -195,6 +199,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 6, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.King
                                         { x = 6, y = 3 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -207,6 +212,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 1, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.King
                                         { x = 1, y = 3 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -234,6 +240,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 4, y = 7 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Rook
                                         { x = 4, y = 7 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -246,6 +253,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 6, y = 4 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Rook
                                         { x = 6, y = 4 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -258,6 +266,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 1, y = 8 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Rook
                                         { x = 1, y = 8 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -285,6 +294,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 6, y = 7 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Knight
                                         { x = 6, y = 7 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -297,6 +307,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 5, y = 4 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Knight
                                         { x = 5, y = 4 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -309,6 +320,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 3, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Knight
                                         { x = 3, y = 3 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -336,6 +348,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 4, y = 5 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Bishop
                                         { x = 4, y = 5 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -348,6 +361,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 6, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Bishop
                                         { x = 6, y = 3 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -360,6 +374,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 2, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Bishop
                                         { x = 2, y = 3 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -387,6 +402,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 7, y = 4 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Pawn
                                         { x = 7, y = 4 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -399,6 +415,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 7, y = 3 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Pawn
                                         { x = 7, y = 3 }
                                         ( Helper.opponentPositions, Types.Active )
@@ -411,6 +428,7 @@ view model =
                               , spot = Util.fieldToSpot Types.White { x = 7, y = 2 }
                               , actual =
                                     Util.getNextPossibleMoves
+                                        Types.Me
                                         Types.Pawn
                                         { x = 7, y = 2 }
                                         ( Helper.opponentPositions, Types.Active )

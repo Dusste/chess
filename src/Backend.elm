@@ -207,7 +207,7 @@ update msg model =
                     (\{ roomId } ->
                         [ Lamdera.sendToFrontend sessionId
                             (Types.BeToChess <| Types.BeToChessResponse <| Types.Notification "Your opponent has left the game")
-                        , BackendUtil.transformGameToSendToFE updateGames <| BackendUtil.getWhoseMoveMaybeWhite roomId updateGames
+                        , BackendUtil.transformGameToSendToFE updateGames (BackendUtil.getWhoseMoveMaybeWhite roomId updateGames) False
                         ]
                     )
                 |> List.concat
@@ -215,6 +215,7 @@ update msg model =
             )
 
         Types.UserConnected sessionId clientId ->
+            -- TODO issue with inactive game - user will get that he is inactive, but its actually there
             let
                 _ =
                     Debug.log "User Connected" ( sessionId, clientId )
@@ -280,6 +281,7 @@ updateFromFrontend sessionId clientId msg model =
                                     List.concat <|
                                         [ BackendUtil.toPlayersPerspective
                                             gameInProgress.whoseMove
+                                            False
                                             { owner = updateOwner
                                             , invitee = updateInvitee
                                             }
@@ -350,7 +352,7 @@ updateFromFrontend sessionId clientId msg model =
                                         model.games
                             in
                             ( { model | games = updateGames }
-                            , BackendUtil.transformGameToSendToFE updateGames <| BackendUtil.getWhoseMoveMaybeWhite roomId updateGames
+                            , BackendUtil.transformGameToSendToFE updateGames (BackendUtil.getWhoseMoveMaybeWhite roomId updateGames) False
                             )
                     in
                     case BackendUtil.checkForProblems roomId sessionId model updated of
@@ -412,6 +414,7 @@ updateFromFrontend sessionId clientId msg model =
                                     List.concat <|
                                         [ BackendUtil.toPlayersPerspective
                                             gameInProgress.whoseMove
+                                            False
                                             { owner = updateOwner, invitee = updateInvitee }
                                         , [ Lamdera.sendToFrontend updateOwner.playersSessionId
                                                 (Types.BeToChess <|
@@ -435,16 +438,11 @@ updateFromFrontend sessionId clientId msg model =
                 Nothing ->
                     newGameUpdateFlow
 
-        Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId figureColor ( pl1, pl2 ) ->
+        Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId figureColor ( pl1, pl2 ) isKingInChessPosition ->
             let
                 whoseMove_ : Types.WhoseMove
                 whoseMove_ =
-                    case figureColor of
-                        Types.Black ->
-                            Types.PlayersMove Types.White
-
-                        Types.White ->
-                            Types.PlayersMove Types.Black
+                    BackendUtil.switchMove figureColor
 
                 updateGames : Dict String Types.Game
                 updateGames =
@@ -502,19 +500,14 @@ updateFromFrontend sessionId clientId msg model =
                                 )
             in
             ( { model | games = updateGames }
-            , BackendUtil.transformGameToSendToFE updateGames whoseMove_
+            , BackendUtil.transformGameToSendToFE updateGames whoseMove_ isKingInChessPosition
             )
 
         Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId figureColor capture ->
             let
                 whoseMove_ : Types.WhoseMove
                 whoseMove_ =
-                    case figureColor of
-                        Types.Black ->
-                            Types.PlayersMove Types.White
-
-                        Types.White ->
-                            Types.PlayersMove Types.Black
+                    BackendUtil.switchMove figureColor
 
                 updateGames : Dict String Types.Game
                 updateGames =
@@ -553,7 +546,7 @@ updateFromFrontend sessionId clientId msg model =
                         )
             in
             ( { model | games = updateGames }
-            , BackendUtil.transformGameToSendToFE updateGames whoseMove_
+            , BackendUtil.transformGameToSendToFE updateGames whoseMove_ False
             )
 
 

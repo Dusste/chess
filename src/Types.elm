@@ -99,6 +99,7 @@ type alias ChessModel =
     , urlString : String
     , roomId : String
     , whoseMove : WhoseMove
+    , isKingInChessPosition : Bool
     }
 
 
@@ -177,7 +178,7 @@ type ToFrontend
 
 
 type BeToChess
-    = GameCurrentState GameFE WhoseMove
+    = GameCurrentState GameFE WhoseMove Bool
     | BeToChessResponse TypeOfResponse
 
 
@@ -190,7 +191,7 @@ type ToBackend
     = NoOpToBackend
     | InitiateGame String
     | JoinGame String
-    | ChessOutMsg_toBackend_SendPositionsUpdate String FigureColor ( List FigureState, List FigureState )
+    | ChessOutMsg_toBackend_SendPositionsUpdate String FigureColor ( List FigureState, List FigureState ) Bool
     | ChessOutMsg_toBackend_SendCaptureUpdate String FigureColor ( Figure, Field )
 
 
@@ -217,6 +218,6 @@ type ChessMsg
         , y : Int
         }
     | CopyRoomUrl
-    | FeToChess_GotGameData GameFE WhoseMove
+    | FeToChess_GotGameData GameFE WhoseMove Bool
     | NotYourMove
     | AbsentOpponent

@@ -83,6 +83,7 @@ initialModel urlString figureColor roomId =
     , figureColor = figureColor
     , roomId = roomId
     , whoseMove = Types.GameIdle
+    , isKingInChessPosition = False
     }
 
 
@@ -145,6 +146,7 @@ update msg model =
                             nextMoves : Types.NextMoves
                             nextMoves =
                                 Util.getNextPossibleMoves
+                                    Types.Me
                                     figure
                                     (Types.Field
                                         desiredOrCurrentPosition.x
@@ -198,53 +200,78 @@ update msg model =
                                             (\{ x, y } ->
                                                 Util.isEqualPosition x desiredOrCurrentPosition.x y desiredOrCurrentPosition.y
                                             )
+                                        |> (\isTrue -> isTrue && not shouldMyMoveBePrevented)
 
-                                updated : ( Model, List OutMsg.OutMsg, Cmd Msg )
-                                updated =
-                                    if isOkToMove then
-                                        -- Alright, good to go !
-                                        let
-                                            updatePlayer2 : ( List Types.FigureState, Types.PlayerStatus )
-                                            updatePlayer2 =
-                                                ( List.map
-                                                    (\( pt, fs ) ->
-                                                        ( pt
-                                                        , { fs
-                                                            | moves =
-                                                                if List.head fs.moves == Just currentField then
-                                                                    { x = desiredOrCurrentPosition.x
-                                                                    , y = desiredOrCurrentPosition.y
-                                                                    }
-                                                                        :: fs.moves
+                                updatedPlayer2 : ( List Types.FigureState, Types.PlayerStatus )
+                                updatedPlayer2 =
+                                    ( List.map
+                                        (\( pt, fs ) ->
+                                            ( pt
+                                            , { fs
+                                                | moves =
+                                                    if List.head fs.moves == Just currentField then
+                                                        { x = desiredOrCurrentPosition.x
+                                                        , y = desiredOrCurrentPosition.y
+                                                        }
+                                                            :: fs.moves
 
-                                                                else
-                                                                    fs.moves
-                                                          }
-                                                        )
-                                                    )
-                                                    (Tuple.first model.player2)
-                                                , Tuple.second model.player2
-                                                )
-                                        in
-                                        ( { model
-                                            | player2 = updatePlayer2
-                                            , possibleNextMoves = Types.Idle
-                                          }
-                                        , [ OutMsg.SendPositionsUpdate model.roomId model.figureColor ( Tuple.first model.player1, Tuple.first updatePlayer2 )
-                                          ]
-                                        , Cmd.none
+                                                    else
+                                                        fs.moves
+                                              }
+                                            )
                                         )
+                                        (Tuple.first model.player2)
+                                    , Tuple.second model.player2
+                                    )
 
-                                    else
-                                        -- Bummer, selected figure can't move to that field!
-                                        ( { model
-                                            | error = Just "Selected figure can't move to that field"
-                                          }
-                                        , []
-                                        , Cmd.none
-                                        )
+                                shouldMyMoveBePrevented : Bool
+                                shouldMyMoveBePrevented =
+                                    Util.numberOfFiguresThatThreatToKing model.player1 updatedPlayer2
+                                        |> List.length
+                                        |> (/=) 0
                             in
-                            updated
+                            if isOkToMove then
+                                -- Alright, good to go !
+                                let
+                                    haveYouGaveChessToOpponent : Bool
+                                    haveYouGaveChessToOpponent =
+                                        Util.getFigureBasedOnField desiredOrCurrentPosition.x desiredOrCurrentPosition.y (Tuple.first updatedPlayer2)
+                                            |> Maybe.map
+                                                (\figure ->
+                                                    Util.getNextPossibleMoves
+                                                        Types.Me
+                                                        figure
+                                                        (Types.Field
+                                                            desiredOrCurrentPosition.x
+                                                            desiredOrCurrentPosition.y
+                                                        )
+                                                        model.player1
+                                                        updatedPlayer2
+                                                        |> .potentialCaptures
+                                                        |> List.filter
+                                                            (\f -> Util.getFigureBasedOnField f.x f.y (Tuple.first model.player1) == Just Types.King)
+                                                        |> List.length
+                                                        |> (/=) 0
+                                                )
+                                            |> Maybe.withDefault False
+                                in
+                                ( { model
+                                    | player2 = updatedPlayer2
+                                    , possibleNextMoves = Types.Idle
+                                  }
+                                , [ OutMsg.SendPositionsUpdate model.roomId model.figureColor ( Tuple.first model.player1, Tuple.first updatedPlayer2 ) haveYouGaveChessToOpponent
+                                  ]
+                                , Cmd.none
+                                )
+
+                            else
+                                -- Bummer, selected figure can't move to that field!
+                                ( { model
+                                    | error = Just "Selected figure can't move to that field"
+                                  }
+                                , []
+                                , Cmd.none
+                                )
 
                         Types.Idle ->
                             -- Move wasn't initialized - You need to choose figure first !
@@ -307,31 +334,69 @@ update msg model =
                                     )
                             , Tuple.second model.player2
                             )
+
+                        haveYouGaveChessToOpponent : Bool
+                        haveYouGaveChessToOpponent =
+                            Util.getFigureBasedOnField positionIntendedToCapture.x positionIntendedToCapture.y (Tuple.first updatedPlayer2)
+                                |> Maybe.map
+                                    (\figure ->
+                                        Util.getNextPossibleMoves
+                                            Types.Me
+                                            figure
+                                            (Types.Field
+                                                positionIntendedToCapture.x
+                                                positionIntendedToCapture.y
+                                            )
+                                            updatedPlayer1
+                                            updatedPlayer2
+                                            |> .potentialCaptures
+                                            |> List.filter
+                                                (\f -> Util.getFigureBasedOnField f.x f.y (Tuple.first updatedPlayer1) == Just Types.King)
+                                            |> List.length
+                                            |> (/=) 0
+                                    )
+                                |> Maybe.withDefault False
+
+                        shouldMyMoveBePrevented : Bool
+                        shouldMyMoveBePrevented =
+                            Util.numberOfFiguresThatThreatToKing updatedPlayer1 updatedPlayer2
+                                |> List.length
+                                |> (/=) 0
                     in
-                    ( { model
-                        | possibleNextMoves = Types.Idle
-                        , player1 = updatedPlayer1
-                        , player2 = updatedPlayer2
-                        , player2Captures =
-                            case positionToCaptureFound of
-                                Just captureFigureState ->
-                                    captureFigureState :: model.player2Captures
+                    if shouldMyMoveBePrevented then
+                        -- Bummer, something is preventing you to move, or selected figure can't move to that field!
+                        ( { model
+                            | error = Just "something is preventing you to move, or selected figure can't move to that field"
+                          }
+                        , []
+                        , Cmd.none
+                        )
+
+                    else
+                        ( { model
+                            | possibleNextMoves = Types.Idle
+                            , player1 = updatedPlayer1
+                            , player2 = updatedPlayer2
+                            , player2Captures =
+                                case positionToCaptureFound of
+                                    Just captureFigureState ->
+                                        captureFigureState :: model.player2Captures
+
+                                    Nothing ->
+                                        model.player2Captures
+                          }
+                        , [ case positionToCaptureFound of
+                                Just capture_ ->
+                                    [ OutMsg.SendCaptureUpdate model.roomId model.figureColor capture_
+                                    , OutMsg.SendPositionsUpdate model.roomId model.figureColor ( Tuple.first updatedPlayer1, Tuple.first updatedPlayer2 ) haveYouGaveChessToOpponent
+                                    ]
 
                                 Nothing ->
-                                    model.player2Captures
-                      }
-                    , [ case positionToCaptureFound of
-                            Just capture_ ->
-                                [ OutMsg.SendCaptureUpdate model.roomId model.figureColor capture_
-                                , OutMsg.SendPositionsUpdate model.roomId model.figureColor ( Tuple.first updatedPlayer1, Tuple.first updatedPlayer2 )
-                                ]
-
-                            Nothing ->
-                                []
-                      ]
-                        |> List.concat
-                    , Cmd.none
-                    )
+                                    []
+                          ]
+                            |> List.concat
+                        , Cmd.none
+                        )
 
                 Types.Idle ->
                     ( { model | error = Just "You need to choose figure first" }
@@ -339,13 +404,15 @@ update msg model =
                     , Cmd.none
                     )
 
-        Types.FeToChess_GotGameData { player1, player2 } whoseMove ->
+        Types.FeToChess_GotGameData { player1, player2 } whoseMove isKingInChessPosition ->
+            -- TODO maybe `isKingInChessPosition` should be just a notification
             ( { model
                 | player1 = ( player1.figures, player1.status )
                 , player2 = ( player2.figures, player2.status )
                 , player1Captures = player1.captures
                 , player2Captures = player2.captures
                 , whoseMove = whoseMove
+                , isKingInChessPosition = isKingInChessPosition
               }
             , []
             , Cmd.none
@@ -402,8 +469,8 @@ viewField model xIndex yIndex =
         figureEl =
             figureToHtml maybeFigure
 
-        isPotenitalMove : Bool
-        isPotenitalMove =
+        isPotentialMove : Bool
+        isPotentialMove =
             case model.possibleNextMoves of
                 Types.NextMove _ nextMoves ->
                     nextMoves.potentialMoves
@@ -439,8 +506,8 @@ viewField model xIndex yIndex =
                     )
                 |> Maybe.withDefault ""
 
-        isPotenitalCapture : Bool
-        isPotenitalCapture =
+        isPotentialCapture : Bool
+        isPotentialCapture =
             case model.possibleNextMoves of
                 Types.NextMove _ nextMoves ->
                     nextMoves.potentialCaptures
@@ -503,10 +570,10 @@ viewField model xIndex yIndex =
                     Types.NoOp
         , HA.class <|
             "relative cursor-pointer flex w-[100px] h-[100px]"
-                ++ (if isPotenitalMove then
+                ++ (if isPotentialMove then
                         " bg-green-100"
 
-                    else if isPotenitalCapture then
+                    else if isPotentialCapture then
                         " bg-red-500"
 
                     else
