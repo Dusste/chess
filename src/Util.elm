@@ -48,16 +48,21 @@ decodeInt val =
             0
 
 
-{-| -- Is any opponent giving chess to my king AFTER I moved ?
--- If so, I can't move, I need to move king, capture opponent or stand in front of opp
+{-| Is any opponent giving chess to my king AFTER I moved ?
+If so, I can't move, I need to move king, capture opponent or stand in front of opp
 -}
 numberOfFiguresThatThreatToKing : ( List Types.FigureState, Types.PlayerStatus ) -> ( List Types.FigureState, Types.PlayerStatus ) -> List Types.Figure
 numberOfFiguresThatThreatToKing opponent me =
     let
-        convertPlayer : ( List Types.FigureState, Types.PlayerStatus )
-        convertPlayer =
+        convertMeToOppPlayer : ( List Types.FigureState, Types.PlayerStatus )
+        convertMeToOppPlayer =
             -- we just switch from `Me` to `Opponent` and mirror fields
             me
+                |> Tuple.mapFirst BackendUtil.convertRoles
+
+        convertOppToMePlayer : ( List Types.FigureState, Types.PlayerStatus )
+        convertOppToMePlayer =
+            opponent
                 |> Tuple.mapFirst BackendUtil.convertRoles
     in
     opponent
@@ -73,23 +78,14 @@ numberOfFiguresThatThreatToKing opponent me =
                                 getNextPossibleMoves
                                     Types.Me
                                     figure
-                                    { x = BackendUtil.coordinateInMirror field.x, y = BackendUtil.coordinateInMirror field.y }
-                                    convertPlayer
-                                    ( [ ( Types.Me
-                                        , { figure = figure
-                                          , moves =
-                                                [ { x = BackendUtil.coordinateInMirror field.x
-                                                  , y = BackendUtil.coordinateInMirror field.y
-                                                  }
-                                                ]
-                                          }
-                                        )
-                                      ]
-                                    , Types.Active
-                                    )
+                                    { x = BackendUtil.coordinateInMirror field.x
+                                    , y = BackendUtil.coordinateInMirror field.y
+                                    }
+                                    convertMeToOppPlayer
+                                    convertOppToMePlayer
                                     |> .potentialCaptures
                                     |> List.filter
-                                        (\f -> getFigureBasedOnField f.x f.y (Tuple.first convertPlayer) == Just Types.King)
+                                        (\f -> getFigureBasedOnField f.x f.y (Tuple.first convertMeToOppPlayer) == Just Types.King)
                                     |> List.length
                                     |> (/=) 0
                         in

@@ -75,7 +75,7 @@ transformGameToSendToFE games whoseMove isKingInChessPosition =
     {- Assuming you are supplying already updated games,
        idea is to transform game and roles inside of each player so that we can supply
        each player on FE with correct "Opponent" and "Owner" data
-       from player's persepctive, he is `player2`
+       from player's perspective, he is `player2`
     -}
     games
         |> Dict.foldl
