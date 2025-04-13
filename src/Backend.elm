@@ -151,8 +151,8 @@ update msg model =
                         |> Dict.toList
                         |> List.map (\t -> { roomId = Tuple.first t, isOwner = True })
 
-                updateGames : Dict String Types.Game
-                updateGames =
+                updatedGames : Dict String Types.Game
+                updatedGames =
                     -- if user is leaving room where he is owner/invitee, we need to set either Frozen or Inactive
                     List.concat [ roomIdsInvitee, roomIdsOwner ]
                         |> List.foldr
@@ -200,14 +200,20 @@ update msg model =
                             )
                             model.games
             in
-            ( { model | games = updateGames }
+            ( { model | games = updatedGames }
             , List.concat
                 [ roomIdsInvitee, roomIdsOwner ]
                 |> List.map
                     (\{ roomId } ->
-                        [ Lamdera.sendToFrontend sessionId
-                            (Types.BeToChess <| Types.BeToChessResponse <| Types.Notification "Your opponent has left the game")
-                        , BackendUtil.transformGameToSendToFE updateGames (BackendUtil.getWhoseMoveMaybeWhite roomId updateGames) False
+                        [ Lamdera.sendToFrontend
+                            sessionId
+                            (Types.BeToChess <|
+                                Types.BeToChessResponse <|
+                                    Types.Notification "Your opponent has left the game"
+                            )
+                        , BackendUtil.transformGameToSendToFE
+                            updatedGames
+                            (BackendUtil.getWhoseMoveMaybeWhite roomId updatedGames)
                         ]
                     )
                 |> List.concat
@@ -263,8 +269,8 @@ updateFromFrontend sessionId clientId msg model =
                                     updateInvitee =
                                         { invitee_ | status = updateStatus }
 
-                                    updateGames : Dict String Types.Game
-                                    updateGames =
+                                    updatedGames : Dict String Types.Game
+                                    updatedGames =
                                         Dict.update roomId
                                             (Maybe.map
                                                 (\game ->
@@ -276,14 +282,14 @@ updateFromFrontend sessionId clientId msg model =
                                             )
                                             model.games
                                 in
-                                ( { model | games = updateGames }
+                                ( { model | games = updatedGames }
                                 , Cmd.batch <|
                                     List.concat <|
                                         [ BackendUtil.toPlayersPerspective
                                             gameInProgress.whoseMove
-                                            False
                                             { owner = updateOwner
                                             , invitee = updateInvitee
+                                            , whoWon = gameInProgress.whoWon
                                             }
                                         , [ Lamdera.sendToFrontend
                                                 updateInvitee.playersSessionId
@@ -316,9 +322,11 @@ updateFromFrontend sessionId clientId msg model =
                                     , figures = startPositionPlayer2
                                     , captures = []
                                     , status = Types.Active
+                                    , isInChess = False
                                     }
                                 , invitee = Nothing
                                 , whoseMove = Types.PlayersMove Types.White
+                                , whoWon = Nothing
                                 }
                                 model.games
                       }
@@ -333,8 +341,8 @@ updateFromFrontend sessionId clientId msg model =
                         updated : ( Model, Cmd Types.BackendMsg )
                         updated =
                             let
-                                updateGames : Dict String Types.Game
-                                updateGames =
+                                updatedGames : Dict String Types.Game
+                                updatedGames =
                                     Dict.update roomId
                                         (Maybe.map
                                             (\game ->
@@ -345,14 +353,15 @@ updateFromFrontend sessionId clientId msg model =
                                                             , figures = startPositionPlayer1
                                                             , captures = []
                                                             , status = Types.Active
+                                                            , isInChess = False
                                                             }
                                                 }
                                             )
                                         )
                                         model.games
                             in
-                            ( { model | games = updateGames }
-                            , BackendUtil.transformGameToSendToFE updateGames (BackendUtil.getWhoseMoveMaybeWhite roomId updateGames) False
+                            ( { model | games = updatedGames }
+                            , BackendUtil.transformGameToSendToFE updatedGames (BackendUtil.getWhoseMoveMaybeWhite roomId updatedGames)
                             )
                     in
                     case BackendUtil.checkForProblems roomId sessionId model updated of
@@ -396,8 +405,8 @@ updateFromFrontend sessionId clientId msg model =
                                     updateOwner =
                                         { owner_ | status = updateStatus }
 
-                                    updateGames : Dict String Types.Game
-                                    updateGames =
+                                    updatedGames : Dict String Types.Game
+                                    updatedGames =
                                         Dict.update roomId
                                             (Maybe.map
                                                 (\game ->
@@ -409,13 +418,12 @@ updateFromFrontend sessionId clientId msg model =
                                             )
                                             model.games
                                 in
-                                ( { model | games = updateGames }
+                                ( { model | games = updatedGames }
                                 , Cmd.batch <|
                                     List.concat <|
                                         [ BackendUtil.toPlayersPerspective
                                             gameInProgress.whoseMove
-                                            False
-                                            { owner = updateOwner, invitee = updateInvitee }
+                                            { owner = updateOwner, invitee = updateInvitee, whoWon = gameInProgress.whoWon }
                                         , [ Lamdera.sendToFrontend updateOwner.playersSessionId
                                                 (Types.BeToChess <|
                                                     Types.BeToChessResponse <|
@@ -438,14 +446,14 @@ updateFromFrontend sessionId clientId msg model =
                 Nothing ->
                     newGameUpdateFlow
 
-        Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId figureColor ( pl1, pl2 ) isKingInChessPosition ->
+        Types.ChessOutMsg_toBackend_SendPositionsUpdate roomId figureColor ( pl1, pl2 ) haveYouGaveChessToOpponent ->
             let
                 whoseMove_ : Types.WhoseMove
                 whoseMove_ =
                     BackendUtil.switchMove figureColor
 
-                updateGames : Dict String Types.Game
-                updateGames =
+                updatedGames : Dict String Types.Game
+                updatedGames =
                     case figureColor of
                         Types.Black ->
                             BackendUtil.updateGames
@@ -459,7 +467,10 @@ updateFromFrontend sessionId clientId msg model =
 
                                         updateOwner : Types.Player
                                         updateOwner =
-                                            { owner_ | figures = BackendUtil.convertRoles pl1 }
+                                            { owner_
+                                                | figures = BackendUtil.convertRoles pl1
+                                                , isInChess = haveYouGaveChessToOpponent
+                                            }
 
                                         updateInvitee : Types.Player
                                         updateInvitee =
@@ -470,6 +481,7 @@ updateFromFrontend sessionId clientId msg model =
                                     { invitee = Just updateInvitee
                                     , owner = updateOwner
                                     , whoseMove = whoseMove_
+                                    , whoWon = Nothing
                                     }
                                 )
 
@@ -485,22 +497,26 @@ updateFromFrontend sessionId clientId msg model =
 
                                         updateOwner : Types.Player
                                         updateOwner =
-                                            { owner_ | figures = pl2 }
+                                            { owner_
+                                                | figures = pl2
+                                            }
 
                                         updateInvitee : Types.Player
                                         updateInvitee =
                                             { invitee_
                                                 | figures = pl1
+                                                , isInChess = haveYouGaveChessToOpponent
                                             }
                                     in
                                     { invitee = Just updateInvitee
                                     , owner = updateOwner
                                     , whoseMove = whoseMove_
+                                    , whoWon = Nothing
                                     }
                                 )
             in
-            ( { model | games = updateGames }
-            , BackendUtil.transformGameToSendToFE updateGames whoseMove_ isKingInChessPosition
+            ( { model | games = updatedGames }
+            , BackendUtil.transformGameToSendToFE updatedGames whoseMove_
             )
 
         Types.ChessOutMsg_toBackend_SendCaptureUpdate roomId figureColor capture ->
@@ -509,8 +525,8 @@ updateFromFrontend sessionId clientId msg model =
                 whoseMove_ =
                     BackendUtil.switchMove figureColor
 
-                updateGames : Dict String Types.Game
-                updateGames =
+                updatedGames : Dict String Types.Game
+                updatedGames =
                     BackendUtil.updateGames
                         roomId
                         model.games
@@ -545,9 +561,53 @@ updateFromFrontend sessionId clientId msg model =
                                     }
                         )
             in
-            ( { model | games = updateGames }
-            , BackendUtil.transformGameToSendToFE updateGames whoseMove_ False
+            ( { model | games = updatedGames }
+            , BackendUtil.transformGameToSendToFE updatedGames whoseMove_
             )
+
+        Types.ChessOutMsg_toBackend_IsGameOver roomId figureColorWhoWon ->
+            case Dict.get roomId model.games of
+                Just gameInProgress ->
+                    case gameInProgress.invitee of
+                        Just invitee ->
+                            let
+                                ownerId : Lamdera.SessionId
+                                ownerId =
+                                    gameInProgress.owner.playersSessionId
+
+                                inviteeId : Lamdera.SessionId
+                                inviteeId =
+                                    invitee.playersSessionId
+
+                                updatedGames : Dict String Types.Game
+                                updatedGames =
+                                    Dict.update roomId
+                                        (Maybe.map
+                                            (\game ->
+                                                { game
+                                                    | whoWon = Just figureColorWhoWon
+                                                }
+                                            )
+                                        )
+                                        model.games
+                            in
+                            ( { model | games = updatedGames }
+                            , [ Lamdera.sendToFrontend ownerId
+                                    (Types.BeToChess <| Types.BeToChessResponse <| Types.GameEnded figureColorWhoWon)
+                              , Lamdera.sendToFrontend inviteeId
+                                    (Types.BeToChess <| Types.BeToChessResponse <| Types.GameEnded figureColorWhoWon)
+                              , BackendUtil.transformGameToSendToFE
+                                    updatedGames
+                                    Types.GameIdle
+                              ]
+                                |> Cmd.batch
+                            )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
 
 app =

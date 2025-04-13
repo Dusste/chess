@@ -10,10 +10,8 @@ import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Lamdera
-import Maybe.Extra
-import OutMsg exposing (OutMsg)
+import OutMsg
 import Random
-import Task
 import Types
 import UUID exposing (UUID)
 import Url exposing (Url)
@@ -149,7 +147,7 @@ initialModel url key =
     , key = key
     , uuid = Nothing
     , page = Types.Loading
-    , game = Nothing
+    , whoWon = Nothing
     }
 
 
@@ -178,12 +176,12 @@ update msg model =
             case model.page of
                 Types.ChessPage mainModel ->
                     let
-                        ( model_, outMsg, cmds_ ) =
+                        ( model_, outMsgs, cmds_ ) =
                             Chess.update msg_ mainModel
                     in
                     ( { model | page = Types.ChessPage model_ }
                     , [ [ Cmd.map Types.GotChessPageMsg cmds_ ]
-                      , OutMsg.map outMsg
+                      , OutMsg.map outMsgs
                       ]
                         |> List.concat
                         |> Cmd.batch
@@ -258,6 +256,10 @@ update msg model =
                 |> Maybe.withDefault Cmd.none
             )
 
+        Types.CloseModal ->
+            -- This is just to hide modal temporarily, after re-load it will re-appear
+            ( { model | whoWon = Nothing }, Cmd.none )
+
 
 updateFromBackend : Types.ToFrontend -> Model -> ( Model, Cmd Types.FrontendMsg )
 updateFromBackend msg model =
@@ -267,7 +269,7 @@ updateFromBackend msg model =
 
         Types.BeToChess toChessMsg ->
             case toChessMsg of
-                Types.GameCurrentState game whoseMove isKingInChessPosition ->
+                Types.GameCurrentState game whoseMove chessGameStatus ->
                     let
                         ( updatedPage, cmd ) =
                             -- TODO find better way to update Chess
@@ -276,7 +278,7 @@ updateFromBackend msg model =
                                 Types.ChessPage mainModel ->
                                     let
                                         ( model_, _, cmds_ ) =
-                                            Chess.update (Types.FeToChess_GotGameData game whoseMove isKingInChessPosition) mainModel
+                                            Chess.update (Types.FeToChess_GotGameData game whoseMove chessGameStatus) mainModel
                                     in
                                     ( Types.ChessPage model_
                                     , Cmd.map Types.GotChessPageMsg cmds_
@@ -286,8 +288,7 @@ updateFromBackend msg model =
                                     ( model.page, Cmd.none )
                     in
                     ( { model
-                        | game = Just game
-                        , page = updatedPage
+                        | page = updatedPage
                       }
                     , cmd
                     )
@@ -296,6 +297,9 @@ updateFromBackend msg model =
                     case typeOfResponse of
                         Types.Notification str ->
                             ( model, Cmd.none )
+
+                        Types.GameEnded figureColorThatWon ->
+                            ( { model | whoWon = Just figureColorThatWon }, Cmd.none )
 
                         Types.Error str ->
                             ( model, Cmd.none )
@@ -318,15 +322,23 @@ appView model =
 content : Model -> Html Types.FrontendMsg
 content model =
     case model.page of
-        Types.ChessPage loginModel ->
+        Types.ChessPage chessModel ->
             -- Html.div []
             --     [ Html.button
             --         [ HE.onClick Types.FeStartGame ]
             --         [ Html.text "start game" ]
-            Chess.view loginModel
-                |> Html.map Types.GotChessPageMsg
+            Html.div
+                []
+                [ case model.whoWon of
+                    Just figureColor ->
+                        viewModal figureColor
 
-        -- ]
+                    Nothing ->
+                        Html.text ""
+                , Chess.view chessModel
+                    |> Html.map Types.GotChessPageMsg
+                ]
+
         Types.BackwardCompatibilityPage model_ ->
             BackwardCompatibility.view model_
                 |> Html.map Types.GotBackwardCompatibilityPageMsg
@@ -355,6 +367,27 @@ content model =
         Types.HomePage model_ ->
             Home.view model_
                 |> Html.map Types.GotHomePageMsg
+
+
+viewModal : Types.FigureColor -> Html Types.FrontendMsg
+viewModal figureColor =
+    Html.div
+        [ HA.class "modal flex justify-center align-center fixed max-h-[100%] max-w-[100%] h-[100%] w-[100%] top-0 z-[1]" ]
+        [ Html.div
+            [ HA.class "flex flex-col min-w-[300px] min-h-[300px] max-w-[700px] max-h-[700px] w-[450px] bg-white p-5 z-[2] relative z-[1]" ]
+            [ Html.span
+                [ HA.class "absolute text-black right-[20px] cursor-pointer p-2"
+                , HE.onClick Types.CloseModal
+                ]
+                [ Html.text "X" ]
+            , Html.h2
+                [ HA.class "text-black text-2xl" ]
+                [ Html.text "Match is over !" ]
+            , Html.p
+                [ HA.class "text-black" ]
+                [ Html.text <| Util.figureColorToStr figureColor ++ " figure won !" ]
+            ]
+        ]
 
 
 subscriptions : Model -> Sub Types.FrontendMsg

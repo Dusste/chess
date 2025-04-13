@@ -5,8 +5,19 @@ import Dict exposing (Dict)
 import Json.Decode
 import List.Extra
 import Ports
+import Task
 import Types
 import Url exposing (Url)
+
+
+msgToCmd : List msg -> Cmd msg
+msgToCmd msgs =
+    msgs
+        |> List.map
+            (\m ->
+                Task.perform (always m) (Task.succeed ())
+            )
+        |> Cmd.batch
 
 
 subscribeOnTimestamp : (Int -> msg) -> Sub msg
@@ -22,6 +33,32 @@ getFigureBasedOnField x y lst =
                 List.head moves == Just (Types.Field x y)
             )
         |> Maybe.map (Tuple.second >> .figure)
+
+
+figureColorToStr : Types.FigureColor -> String
+figureColorToStr fg =
+    case fg of
+        Types.Black ->
+            "black"
+
+        Types.White ->
+            "white"
+
+
+getKingsPosition : Types.Figure -> List Types.FigureState -> Maybe Types.Field
+getKingsPosition fg lst =
+    case fg of
+        Types.King ->
+            lst
+                |> List.Extra.find
+                    (\( _, { figure } ) ->
+                        figure == Types.King
+                    )
+                |> Maybe.map (Tuple.second >> .moves)
+                |> Maybe.andThen List.head
+
+        _ ->
+            Nothing
 
 
 mapToFigureColor : Maybe String -> Maybe Types.FigureColor
@@ -428,9 +465,11 @@ getAllPossibleMovesKing myPosition opponentsLst myFiguresLst allFiguresLst =
     , { x = myPosition.x + 1, y = myPosition.y - 1 }
     , { x = myPosition.x - 1, y = myPosition.y + 1 }
     ]
+        |> List.filter (\{ x, y } -> (x >= 1 && x <= 8) && (y >= 1 && y <= 8))
         |> List.foldr
             (\field sum ->
                 let
+                    isMyFigureOnPotentialNextField : Bool
                     isMyFigureOnPotentialNextField =
                         List.member field (myFiguresLst |> List.map (\( _, f ) -> f))
 

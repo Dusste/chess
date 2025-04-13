@@ -83,7 +83,7 @@ initialModel urlString figureColor roomId =
     , figureColor = figureColor
     , roomId = roomId
     , whoseMove = Types.GameIdle
-    , isKingInChessPosition = False
+    , isGameOverAndWhoWon = Types.Competing
     }
 
 
@@ -404,17 +404,55 @@ update msg model =
                     , Cmd.none
                     )
 
-        Types.FeToChess_GotGameData { player1, player2 } whoseMove isKingInChessPosition ->
+        Types.FeToChess_GotGameData { player1, player2 } whoseMove chessGameStatus ->
             -- TODO maybe `isKingInChessPosition` should be just a notification
+            let
+                gotChessMate : Bool
+                gotChessMate =
+                    case ( Util.getKingsPosition Types.King player2.figures, chessGameStatus ) of
+                        ( Just kingsField, Types.IsInChess ) ->
+                            Util.getNextPossibleMoves
+                                Types.Me
+                                Types.King
+                                kingsField
+                                ( player1.figures, player1.status )
+                                ( player2.figures, player2.status )
+                                |> .potentialMoves
+                                |> List.length
+                                |> (==) 0
+
+                        _ ->
+                            False
+            in
             ( { model
                 | player1 = ( player1.figures, player1.status )
                 , player2 = ( player2.figures, player2.status )
                 , player1Captures = player1.captures
                 , player2Captures = player2.captures
                 , whoseMove = whoseMove
-                , isKingInChessPosition = isKingInChessPosition
+                , isGameOverAndWhoWon = chessGameStatus
               }
-            , []
+            , -- For some unknown reason dispatching OUTmsg from here doesn't work
+              []
+            , if gotChessMate then
+                [ Types.DispatchGameOverToBE
+                    model.roomId
+                    (if model.figureColor == Types.Black then
+                        Types.White
+
+                     else
+                        Types.Black
+                    )
+                ]
+                    |> Util.msgToCmd
+
+              else
+                Cmd.none
+            )
+
+        Types.DispatchGameOverToBE roomId figureColorWhoWon ->
+            ( model
+            , [ OutMsg.IsGameOver roomId figureColorWhoWon ]
             , Cmd.none
             )
 
@@ -523,51 +561,7 @@ viewField model xIndex yIndex =
             { figure = maybeFigure, x = xIndex, y = yIndex }
     in
     Html.div
-        [ HE.onClick <|
-            -- TODO make it smarter
-            case model.whoseMove of
-                Types.PlayersMove figureColor ->
-                    case figureColor of
-                        Types.White ->
-                            if Tuple.second model.player2 == Types.Freezed then
-                                Types.AbsentOpponent
-
-                            else if model.figureColor == Types.White then
-                                if isMyFigure_ || maybeFigure == Nothing then
-                                    Types.InitiateMove position
-
-                                else
-                                    case maybeFigure of
-                                        Just fg ->
-                                            Types.InitiateCapture { figure = fg, x = position.x, y = position.y }
-
-                                        Nothing ->
-                                            Types.NoOp
-
-                            else
-                                Types.NotYourMove
-
-                        Types.Black ->
-                            if Tuple.second model.player2 == Types.Freezed then
-                                Types.AbsentOpponent
-
-                            else if model.figureColor == Types.Black then
-                                if isMyFigure_ || maybeFigure == Nothing then
-                                    Types.InitiateMove position
-
-                                else
-                                    case maybeFigure of
-                                        Just fg ->
-                                            Types.InitiateCapture { figure = fg, x = position.x, y = position.y }
-
-                                        Nothing ->
-                                            Types.NoOp
-
-                            else
-                                Types.NotYourMove
-
-                Types.GameIdle ->
-                    Types.NoOp
+        [ HE.onClick <| clickFieldHandler isMyFigure_ maybeFigure position model
         , HA.class <|
             "relative cursor-pointer flex w-[100px] h-[100px]"
                 ++ (if isPotentialMove then
@@ -682,73 +676,78 @@ view model =
         [ HA.class "" ]
         [ Html.Extra.viewIf (model.whoseMove /= Types.GameIdle)
             (viewStatus model)
-        , case model.figureColor of
-            Types.Black ->
-                Html.div
-                    [ HA.class "flex flex-col mb-4" ]
-                    [ Html.h1
-                        [ HA.class "text-4xl m-10 text-center" ]
-                        [ Html.text "Welcome to game"
-                        ]
-                    , case model.whoseMove of
-                        Types.GameIdle ->
-                            Html.text ""
+        , case model.isGameOverAndWhoWon of
+            Types.GameOver fg ->
+                Html.div [] [ Html.text <| "Game is over ! " ++ Util.figureColorToStr fg ++ " have won the game !" ]
 
-                        -- Types.StartGame ->
-                        --     Html.p
-                        --         [ HA.class "text-center" ]
-                        --         [ Html.text "Thanks for accepting invitation ! Its White's move" ]
-                        Types.PlayersMove figureColor ->
-                            case figureColor of
-                                Types.Black ->
-                                    Html.p
-                                        [ HA.class "text-center" ]
-                                        [ Html.text "Black's move" ]
-
-                                Types.White ->
-                                    Html.p
-                                        [ HA.class "text-center" ]
-                                        [ Html.text "White's move" ]
-                    ]
-
-            Types.White ->
-                -- TODO I see some annoying jumps on refresh
-                Html.div
-                    [ HA.class "flex flex-col mb-4" ]
-                    [ case model.whoseMove of
-                        Types.GameIdle ->
-                            Html.h1
+            _ ->
+                case model.figureColor of
+                    Types.Black ->
+                        Html.div
+                            [ HA.class "flex flex-col mb-4" ]
+                            [ Html.h1
                                 [ HA.class "text-4xl m-10 text-center" ]
-                                [ Html.text "You are about to start a game with friend" ]
-
-                        -- Types.StartGame ->
-                        --     "Let the game begin ! White's move"
-                        Types.PlayersMove figureColor ->
-                            viewWhoseMove figureColor
-                    , Html.Extra.viewIf (model.whoseMove == Types.GameIdle)
-                        (Html.div [ HA.class "flex flex-col" ]
-                            [ Html.p
-                                [ HA.class "text-center" ]
-                                [ Html.text "Send invite to your friend" ]
-                            , Html.div
-                                [ HA.class "flex self-center" ]
-                                [ Components.InputField.view
-                                    |> Components.InputField.withValue (model.urlString ++ "?invite=true")
-                                    |> Components.InputField.withReadOnly
-                                    |> Components.InputField.withDisable False
-                                    |> Components.InputField.withError []
-                                    |> Components.InputField.withExtraText (Components.InputField.Placeholder "Email")
-                                    |> Components.InputField.toHtml
-                                , Components.Button.view
-                                    |> Components.Button.withText "Copy"
-                                    |> Components.Button.withMsg Types.CopyRoomUrl
-                                    |> Components.Button.withDisabled False
-                                    |> Components.Button.withPrimaryStyle
-                                    |> Components.Button.toHtml
+                                [ Html.text "Welcome to game"
                                 ]
+                            , case model.whoseMove of
+                                Types.GameIdle ->
+                                    Html.text ""
+
+                                -- Types.StartGame ->
+                                --     Html.p
+                                --         [ HA.class "text-center" ]
+                                --         [ Html.text "Thanks for accepting invitation ! Its White's move" ]
+                                Types.PlayersMove figureColor ->
+                                    case figureColor of
+                                        Types.Black ->
+                                            Html.p
+                                                [ HA.class "text-center" ]
+                                                [ Html.text "Black's move" ]
+
+                                        Types.White ->
+                                            Html.p
+                                                [ HA.class "text-center" ]
+                                                [ Html.text "White's move" ]
                             ]
-                        )
-                    ]
+
+                    Types.White ->
+                        -- TODO I see some annoying jumps on refresh
+                        Html.div
+                            [ HA.class "flex flex-col mb-4" ]
+                            [ case model.whoseMove of
+                                Types.GameIdle ->
+                                    Html.h1
+                                        [ HA.class "text-4xl m-10 text-center" ]
+                                        [ Html.text "You are about to start a game with friend" ]
+
+                                -- Types.StartGame ->
+                                --     "Let the game begin ! White's move"
+                                Types.PlayersMove figureColor ->
+                                    viewWhoseMove figureColor
+                            , Html.Extra.viewIf (model.whoseMove == Types.GameIdle)
+                                (Html.div [ HA.class "flex flex-col" ]
+                                    [ Html.p
+                                        [ HA.class "text-center" ]
+                                        [ Html.text "Send invite to your friend" ]
+                                    , Html.div
+                                        [ HA.class "flex self-center" ]
+                                        [ Components.InputField.view
+                                            |> Components.InputField.withValue (model.urlString ++ "?invite=true")
+                                            |> Components.InputField.withReadOnly
+                                            |> Components.InputField.withDisable False
+                                            |> Components.InputField.withError []
+                                            |> Components.InputField.withExtraText (Components.InputField.Placeholder "Email")
+                                            |> Components.InputField.toHtml
+                                        , Components.Button.view
+                                            |> Components.Button.withText "Copy"
+                                            |> Components.Button.withMsg Types.CopyRoomUrl
+                                            |> Components.Button.withDisabled False
+                                            |> Components.Button.withPrimaryStyle
+                                            |> Components.Button.toHtml
+                                        ]
+                                    ]
+                                )
+                            ]
         , case model.error of
             Just err ->
                 Html.p
@@ -888,3 +887,55 @@ capturesView model =
                         ]
                     ]
         ]
+
+
+clickFieldHandler : Bool -> Maybe Types.Figure -> Types.Position -> Model -> Types.ChessMsg
+clickFieldHandler isMyFigure_ maybeFigure position model =
+    -- TODO make it smarter
+    if model.isGameOverAndWhoWon == Types.Competing then
+        case model.whoseMove of
+            Types.PlayersMove figureColor ->
+                case figureColor of
+                    Types.White ->
+                        if Tuple.second model.player2 == Types.Freezed then
+                            Types.AbsentOpponent
+
+                        else if model.figureColor == Types.White then
+                            if isMyFigure_ || maybeFigure == Nothing then
+                                Types.InitiateMove position
+
+                            else
+                                case maybeFigure of
+                                    Just fg ->
+                                        Types.InitiateCapture { figure = fg, x = position.x, y = position.y }
+
+                                    Nothing ->
+                                        Types.NoOp
+
+                        else
+                            Types.NotYourMove
+
+                    Types.Black ->
+                        if Tuple.second model.player2 == Types.Freezed then
+                            Types.AbsentOpponent
+
+                        else if model.figureColor == Types.Black then
+                            if isMyFigure_ || maybeFigure == Nothing then
+                                Types.InitiateMove position
+
+                            else
+                                case maybeFigure of
+                                    Just fg ->
+                                        Types.InitiateCapture { figure = fg, x = position.x, y = position.y }
+
+                                    Nothing ->
+                                        Types.NoOp
+
+                        else
+                            Types.NotYourMove
+
+            Types.GameIdle ->
+                Types.NoOp
+
+    else
+        Types.NoOp

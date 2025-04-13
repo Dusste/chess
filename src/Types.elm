@@ -12,8 +12,8 @@ type alias FrontendModel =
     { url : Url.Url
     , key : Nav.Key
     , page : Page
-    , game : Maybe GameFE -- TODO remove game from model since you are just passing it from BE to Chess
     , uuid : Maybe UUID.UUID
+    , whoWon : Maybe FigureColor
     }
 
 
@@ -99,7 +99,7 @@ type alias ChessModel =
     , urlString : String
     , roomId : String
     , whoseMove : WhoseMove
-    , isKingInChessPosition : Bool
+    , isGameOverAndWhoWon : ChessStatus
     }
 
 
@@ -141,7 +141,15 @@ type alias Game =
     { owner : Player
     , invitee : Maybe Player
     , whoseMove : WhoseMove
+    , whoWon : Maybe FigureColor
     }
+
+
+type ChessStatus
+    = Competing
+    | IsInChess
+      -- figure color of winner
+    | GameOver FigureColor
 
 
 type alias GameFE =
@@ -162,6 +170,7 @@ type alias Player =
     , figures : List FigureState
     , captures : List ( Figure, Field )
     , status : PlayerStatus
+    , isInChess : Bool
     }
 
 
@@ -178,12 +187,13 @@ type ToFrontend
 
 
 type BeToChess
-    = GameCurrentState GameFE WhoseMove Bool
+    = GameCurrentState GameFE WhoseMove ChessStatus
     | BeToChessResponse TypeOfResponse
 
 
 type TypeOfResponse
     = Notification String
+    | GameEnded FigureColor
     | Error String
 
 
@@ -193,6 +203,7 @@ type ToBackend
     | JoinGame String
     | ChessOutMsg_toBackend_SendPositionsUpdate String FigureColor ( List FigureState, List FigureState ) Bool
     | ChessOutMsg_toBackend_SendCaptureUpdate String FigureColor ( Figure, Field )
+    | ChessOutMsg_toBackend_IsGameOver String FigureColor
 
 
 type BackendMsg
@@ -207,6 +218,7 @@ type FrontendMsg
     | GotChessPageMsg ChessMsg
     | GotHomePageMsg HomeMsg
     | GotTimestamp Int
+    | CloseModal
 
 
 type ChessMsg
@@ -218,6 +230,7 @@ type ChessMsg
         , y : Int
         }
     | CopyRoomUrl
-    | FeToChess_GotGameData GameFE WhoseMove Bool
+    | FeToChess_GotGameData GameFE WhoseMove ChessStatus
     | NotYourMove
     | AbsentOpponent
+    | DispatchGameOverToBE String FigureColor

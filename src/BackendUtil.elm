@@ -70,8 +70,8 @@ convertRoles player =
         player
 
 
-transformGameToSendToFE : Dict String Types.Game -> Types.WhoseMove -> Bool -> Cmd msg
-transformGameToSendToFE games whoseMove isKingInChessPosition =
+transformGameToSendToFE : Dict String Types.Game -> Types.WhoseMove -> Cmd msg
+transformGameToSendToFE games whoseMove =
     {- Assuming you are supplying already updated games,
        idea is to transform game and roles inside of each player so that we can supply
        each player on FE with correct "Opponent" and "Owner" data
@@ -79,26 +79,25 @@ transformGameToSendToFE games whoseMove isKingInChessPosition =
     -}
     games
         |> Dict.foldl
-            (\_ { owner, invitee } _ ->
+            (\_ { owner, invitee, whoWon } _ ->
                 case invitee of
                     Just invitee_ ->
-                        [ { owner = owner, invitee = invitee_ } ]
+                        [ { owner = owner, invitee = invitee_, whoWon = whoWon } ]
 
                     Nothing ->
                         []
             )
             []
-        |> List.map (toPlayersPerspective whoseMove isKingInChessPosition)
+        |> List.map (toPlayersPerspective whoseMove)
         |> List.concat
         |> Cmd.batch
 
 
 toPlayersPerspective :
     Types.WhoseMove
-    -> Bool
-    -> { owner : Types.Player, invitee : Types.Player }
+    -> { owner : Types.Player, invitee : Types.Player, whoWon : Maybe Types.FigureColor }
     -> List (Cmd backendMsg)
-toPlayersPerspective whoseMove isKingInChessPosition { owner, invitee } =
+toPlayersPerspective whoseMove { owner, invitee, whoWon } =
     let
         toPlayerFEFromOwnersPerspective : { player1 : Types.PlayerFe, player2 : Types.PlayerFe }
         toPlayerFEFromOwnersPerspective =
@@ -138,29 +137,49 @@ toPlayersPerspective whoseMove isKingInChessPosition { owner, invitee } =
                 }
             }
     in
-    [ Lamdera.sendToFrontend owner.playersSessionId
+    [ Lamdera.sendToFrontend
+        owner.playersSessionId
         (Types.BeToChess
             (Types.GameCurrentState toPlayerFEFromOwnersPerspective
                 whoseMove
-                (case whoseMove of
-                    Types.PlayersMove Types.White ->
-                        isKingInChessPosition
+                (case whoWon of
+                    Just fg ->
+                        Types.GameOver fg
 
-                    _ ->
-                        False
+                    Nothing ->
+                        case whoseMove of
+                            Types.PlayersMove Types.White ->
+                                if owner.isInChess then
+                                    Types.IsInChess
+
+                                else
+                                    Types.Competing
+
+                            _ ->
+                                Types.Competing
                 )
             )
         )
-    , Lamdera.sendToFrontend invitee.playersSessionId
+    , Lamdera.sendToFrontend
+        invitee.playersSessionId
         (Types.BeToChess
             (Types.GameCurrentState toPlayerFEFromInviteePerspective
                 whoseMove
-                (case whoseMove of
-                    Types.PlayersMove Types.Black ->
-                        isKingInChessPosition
+                (case whoWon of
+                    Just fg ->
+                        Types.GameOver fg
 
-                    _ ->
-                        False
+                    Nothing ->
+                        case whoseMove of
+                            Types.PlayersMove Types.Black ->
+                                if invitee.isInChess then
+                                    Types.IsInChess
+
+                                else
+                                    Types.Competing
+
+                            _ ->
+                                Types.Competing
                 )
             )
         )
