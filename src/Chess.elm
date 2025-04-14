@@ -892,7 +892,7 @@ capturesView model =
 clickFieldHandler : Bool -> Maybe Types.Figure -> Types.Position -> Model -> Types.ChessMsg
 clickFieldHandler isMyFigure_ maybeFigure position model =
     -- TODO make it smarter
-    if model.isGameOverAndWhoWon == Types.Competing then
+    if List.member model.isGameOverAndWhoWon [ Types.IsInChess, Types.Competing ] then
         case model.whoseMove of
             Types.PlayersMove figureColor ->
                 case figureColor of
